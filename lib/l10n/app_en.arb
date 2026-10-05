@@ -1,0 +1,139 @@
+{
+  "@@locale": "en",
+  "appName": "FileVault",
+  "navHome": "Home",
+  "navBrowse": "Browse",
+  "navSearch": "Search",
+  "navSettings": "Settings",
+  "searchAction": "Search",
+  "accountAction": "Account",
+  "backAction": "Go back",
+  "closeAction": "Close",
+  "moreOptions": "More options",
+  "splashSemantics": "FileVault is checking storage access",
+  "permissionTitle": "Permission Setup",
+  "permissionBadge": "Storage Access",
+  "permissionStep": "Step 1 of 2",
+  "permissionHeadline": "Allow access to manage files",
+  "permissionBody": "FileVault requires All Files Access (MANAGE_EXTERNAL_STORAGE) to browse, organize, encrypt, and safeguard your documents, photos, and media across internal and SD card storage.",
+  "permissionBenefitBrowseTitle": "Browse & organize all folders",
+  "permissionBenefitBrowseSubtitle": "Full directory tree support with zero blindspots",
+  "permissionBenefitEncryptTitle": "Local AES-256 encryption",
+  "permissionBenefitEncryptSubtitle": "Hardware-backed vault for private archives",
+  "permissionBenefitCleanTitle": "Clean junk & duplicates safely",
+  "permissionBenefitCleanSubtitle": "Reclaim space from lingering temp files",
+  "permissionPrivacy": "Your files never leave your device. FileVault operates 100% offline with zero cloud tracking.",
+  "permissionGrant": "Grant access",
+  "permissionNotNow": "Not now",
+  "permissionOpeningSettings": "Opening system settings...",
+  "permissionDeniedHeadline": "Storage access was denied",
+  "permissionDeniedBody": "Without All Files Access, FileVault cannot list, copy, or protect files on this device. You can grant access now or continue with limited features.",
+  "permissionTryAgain": "Try again",
+  "permissionPermanentlyDeniedHeadline": "Permission is blocked",
+  "permissionPermanentlyDeniedBody": "All Files Access was permanently denied. Open system settings, tap Permissions, and allow access to all files.",
+  "permissionOpenSettings": "Open settings",
+  "internalStorage": "Internal storage",
+  "usedOfTotal": "{used} used of {total}",
+  "@usedOfTotal": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "freeSpace": "{free} free space",
+  "@freeSpace": {
+    "placeholders": {
+      "free": { "type": "String" }
+    }
+  },
+  "percentUsed": "{percent}%",
+  "@percentUsed": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "usedLabel": "used",
+  "cleanUp": "Clean Up",
+  "sdCardOptions": "SD Card options",
+  "ejectSdCard": "Eject SD card",
+  "categoriesTitle": "Categories",
+  "categoriesCount": "{count} categories",
+  "@categoriesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "categoryImages": "Images",
+  "categoryVideos": "Videos",
+  "categoryAudio": "Audio",
+  "categoryDocuments": "Documents",
+  "categoryDownloads": "Downloads",
+  "categoryApks": "APKs & Apps",
+  "categoryArchives": "Archives",
+  "categoryTrash": "Trash",
+  "categoryCountSize": "{count} • {size}",
+  "@categoryCountSize": {
+    "placeholders": {
+      "count": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+  "recentFiles": "Recent files",
+  "viewAll": "View all",
+  "quickAccess": "Quick access",
+  "quickAccessMore": "Quick access options",
+  "homeEmptyRecents": "Files you open will show up here",
+  "browserEmptyTitle": "This folder is empty",
+  "browserEmptyBody": "Create a folder or copy files here to get started.",
+  "searchHint": "Search files, folders, types",
+  "searchEmptyTitle": "Search your vault",
+  "searchEmptyBody": "Find files by name, type, size, or date. Indexing starts after storage access is granted.",
+  "settingsTitle": "Filevault Settings",
+  "settingsSearch": "Search settings",
+  "allFilesAccess": "All Files Access",
+  "allFilesAccessGranted": "Granted",
+  "allFilesAccessMissing": "Not granted",
+  "allFilesAccessBody": "Required to browse every folder, including SD cards and USB drives.",
+  "managePermission": "Manage",
+  "appearanceSection": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "accentOcean": "Ocean Blue",
+  "accentForest": "Forest Emerald",
+  "accentViolet": "Deep Violet",
+  "accentRose": "Rose Berry",
+  "accentAmber": "Warm Amber",
+  "browsingSection": "Browsing",
+  "defaultViewMode": "Default view mode",
+  "defaultSort": "Default sort",
+  "showHiddenFiles": "Show hidden files",
+  "listView": "List",
+  "gridView": "Grid",
+  "sortName": "Name",
+  "sortSize": "Size",
+  "sortDate": "Date",
+  "sortType": "Type",
+  "trashSection": "Trash & Storage",
+  "trashAutoClean": "Auto-clean trash after",
+  "daysCount": "{days} days",
+  "@daysCount": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "never": "Never",
+  "confirmBeforeDelete": "Confirm before delete",
+  "aboutSection": "About",
+  "appVersion": "Version",
+  "licenses": "Licenses",
+  "privacyOffline": "100% offline · no cloud tracking",
+  "comingSoonTitle": "Coming in a later phase",
+  "favoritesTitle": "Favorites",
+  "recentsTitle": "Recents",
+  "archiveTitle": "Archives",
+  "analyzerTitle": "Storage analyzer",
+  "operationsTitle": "Operations",
+  "viewerTitle": "Viewer",
+  "unknownValue": "—"
+}

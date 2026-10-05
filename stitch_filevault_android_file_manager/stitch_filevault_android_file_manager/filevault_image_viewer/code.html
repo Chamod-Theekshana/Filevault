@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Roboto+Flex:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary": "#0045b9", "inverse-surface": "#213145", "on-secondary-fixed-variant": "#633f00", "surface-container-high": "#dce9ff", "tertiary-fixed": "#dbe1ff", "on-primary": "#ffffff", "on-surface-variant": "#40484e", "secondary-fixed": "#ffddb5", "surface-dim": "#cbdbf5", "on-primary-container": "#cfeaff", "background": "#f8f9ff", "on-tertiary-container": "#e0e5ff", "surface-tint": "#00658e", "surface-container": "#e5eeff", "inverse-on-surface": "#eaf1ff", "on-primary-fixed-variant": "#004c6c", "secondary-container": "#fdb244", "outline": "#70787f", "on-secondary-fixed": "#2a1800", "surface-variant": "#d3e4fe", "on-error-container": "#93000a", "primary-fixed-dim": "#84cfff", "inverse-primary": "#84cfff", "on-error": "#ffffff", "on-primary-fixed": "#001e2e", "on-secondary": "#ffffff", "surface-bright": "#f8f9ff", "on-tertiary-fixed": "#00174b", "tertiary-container": "#185ce4", "outline-variant": "#bfc7cf", "surface": "#f8f9ff", "on-surface": "#0b1c30", "tertiary-fixed-dim": "#b4c5ff", "on-tertiary": "#ffffff", "surface-container-lowest": "#ffffff", "error": "#ba1a1a", "primary-container": "#0b6e99", "surface-container-low": "#eff4ff", "secondary-fixed-dim": "#ffb956", "on-background": "#0b1c30", "primary-fixed": "#c7e7ff", "secondary": "#835400", "on-secondary-container": "#6e4600", "primary": "#005578", "error-container": "#ffdad6", "surface-container-highest": "#d3e4fe", "on-tertiary-fixed-variant": "#003ea8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter": "1rem", "space-lg": "1.5rem", "space-xs": "0.25rem", "space-xl": "2rem", "margin": "1rem", "space-sm": "0.5rem" }, fontFamily: { "body-md": ["Inter"], "headline-sm": ["Roboto Flex"], "body-sm": ["Inter"], "label-lg": ["Inter"], "code-sm": ["Inter"], "label-md": ["Inter"], "headline-md": ["Roboto Flex"], "body-lg": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Roboto Flex"] }, fontSize: { "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "code-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "600" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "700" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;background-color:#f8f9ff;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0 pr-space-sm"><button aria-label="Go back" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Media Viewer</h1></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="File options" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-safe bg-surface"><div class="flex flex-col w-full relative select-none">
+<!-- Immersive Canvas Container -->
+<div class="relative w-full overflow-hidden flex flex-col items-center justify-between" id="viewer-container" style="background-color: #000000; height: calc(100vh - 4rem);">
+<!-- Top Floating Scrim & Action Bar -->
+<div class="absolute top-0 inset-x-0 z-30 transition-all duration-300 ease-out flex flex-col" id="top-bar-overlay">
+<!-- Gradient Scrim for Contrast -->
+<div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none"></div>
+<!-- Action Row -->
+<div class="relative z-10 px-margin pt-space-sm pb-space-md flex items-center justify-between gap-space-sm backdrop-blur-md bg-black/20">
+<!-- Back & Metadata -->
+<div class="flex items-center gap-space-xs min-w-0">
+<button aria-label="Go back" class="w-12 h-12 flex items-center justify-center rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-95 transition-all" onclick="history.back()" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex flex-col min-w-0 pr-space-xs">
+<span class="font-label-lg text-label-lg text-on-primary truncate tracking-tight">IMG_20241018_Sunset.jpg</span>
+<div class="flex items-center gap-1.5 font-body-sm text-body-sm text-outline-variant">
+<span>3840×2160</span>
+<span class="inline-block w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>4.2 MB</span>
+<span class="inline-block w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-primary-fixed-dim">HDR</span>
+</div>
+</div>
+</div>
+<!-- Utility Actions -->
+<div class="flex items-center shrink-0">
+<button aria-label="Share photo" class="w-11 h-11 flex items-center justify-center rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" type="button">
+<span class="material-symbols-outlined text-[22px]">share</span>
+</button>
+<button aria-label="View photo info" class="w-11 h-11 flex items-center justify-center rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" id="info-btn" type="button">
+<span class="material-symbols-outlined text-[22px]">info</span>
+</button>
+<button aria-label="Delete photo" class="w-11 h-11 flex items-center justify-center rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" type="button">
+<span class="material-symbols-outlined text-[22px]">delete</span>
+</button>
+<button aria-label="More options" class="w-11 h-11 flex items-center justify-center rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" type="button">
+<span class="material-symbols-outlined text-[22px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Center Stage: Photo Frame & Gestures -->
+<div class="relative w-full h-full flex items-center justify-center overflow-hidden cursor-zoom-in" id="photo-stage" onclick="toggleOverlays()">
+<div class="relative w-full h-full flex items-center justify-center transition-transform duration-300 ease-out" id="image-transform-wrapper">
+<img alt="Spectacular misty mountain peaks at sunset" class="max-w-full max-h-full object-contain pointer-events-none drop-shadow-2xl transition-all duration-200" id="main-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmtGKfZE0nLqOpbLKgIv6pjoUpdzjEO_RhPOF5iHIMqnmC_LarxfE8J1Ubr5YYrshVK0CS7ysslg9WSieobWqeEGztIOVsZA54H0s5YwpZZFRRhDysZHqeyJJ8hexn8g19GyvLwjBSdh0hkqeC06QJTXFfPrF4lSDxIsJLovpWhjUBudQPVyNqMZbySvRogUZIo_9HNtkbt9k3uw9IdnS6iNCrvJYA1y2aUFoQNQqL6_zXx9NsNiVHPQ"/>
+</div>
+<!-- Quick Zoom Level Indicator -->
+<div class="absolute top-24 right-4 z-20 pointer-events-none opacity-0 transition-opacity duration-200 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md flex items-center gap-1 text-on-primary font-code-sm text-code-sm" id="zoom-chip">
+<span class="material-symbols-outlined text-[14px] text-primary-fixed-dim">search</span>
+<span id="zoom-text">100%</span>
+</div>
+<!-- Double Tap Hint Toast -->
+<div class="absolute bottom-36 z-20 pointer-events-none px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-lg flex items-center gap-2 shadow-xl opacity-0 transition-opacity duration-500" id="gesture-hint">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed">touch_app</span>
+<span class="text-on-primary font-label-md text-label-md">Double tap to inspect details</span>
+</div>
+</div>
+<!-- Metadata Drawer / Slide-over Info Panel -->
+<div class="absolute inset-x-0 bottom-0 z-40 transform translate-y-full transition-transform duration-300 ease-out bg-inverse-surface/95 backdrop-blur-2xl rounded-t-xl px-margin pt-4 pb-safe flex flex-col gap-3 shadow-2xl" id="info-drawer">
+<div class="w-12 h-1 rounded-full bg-outline/50 self-center"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-inverse-on-surface">Details</span>
+<span class="font-body-sm text-body-sm text-outline-variant">Captured on Sony Alpha a7 IV</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-inverse-on-surface hover:bg-surface-container-high/20" onclick="closeInfoDrawer(event)" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="bg-surface-container-lowest/10 p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[20px]">camera</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline-variant">Aperture &amp; Lens</span>
+<span class="font-label-md text-label-md text-inverse-on-surface">f/2.8 • 24mm • 1/250s</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest/10 p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">iso</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline-variant">ISO &amp; Sensor</span>
+<span class="font-label-md text-label-md text-inverse-on-surface">ISO 100 • Full Frame</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest/10 p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px]">palette</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline-variant">Color Space</span>
+<span class="font-label-md text-label-md text-inverse-on-surface">DCI-P3 • 10-bit</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest/10 p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[20px]">location_on</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline-variant">Location</span>
+<span class="font-label-md text-label-md text-inverse-on-surface truncate">Dolomites, Italy</span>
+</div>
+</div>
+</div>
+<div class="h-4"></div>
+</div>
+<!-- Bottom Controls & Carousel Strip Overlays -->
+<div class="absolute bottom-0 inset-x-0 z-30 transition-all duration-300 ease-out flex flex-col items-center gap-3 pb-safe" id="bottom-bar-overlay">
+<!-- Gradient Scrim for Bottom Controls -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none"></div>
+<!-- Pager Pill Badge -->
+<div class="relative z-10 flex items-center justify-center">
+<div class="px-3.5 py-1 rounded-full bg-black/60 backdrop-blur-md flex items-center gap-1.5 shadow-lg">
+<span class="material-symbols-outlined text-[14px] text-primary-fixed-dim">photo_library</span>
+<span class="font-code-sm text-code-sm text-on-primary tracking-wide">14 of 48</span>
+</div>
+</div>
+<!-- Horizontal Thumbnail Filmstrip Strip -->
+<div class="relative z-10 w-full overflow-x-auto no-scrollbar px-margin py-1 flex items-center justify-center gap-2">
+<!-- Thumbnail 12 -->
+<button aria-label="Photo 12" class="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden opacity-40 hover:opacity-80 transition-opacity" type="button">
+<img class="w-full h-full object-cover" data-alt="Golden mountain ridge at sunrise with dramatic shadows and deep blue skies, cinematic travel photography, misty atmospheric depth" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXoaD3TMgyRoJedS1aSLH7QtKprT2j7E1yVub5ATDERAZzlU3oTb9C4kKTysSnVsDsBU--a6ZDjGRhTWx4uGb6KYdYdgqbEBI8qUcnwX533x1EOznhCQlRjsYuDPNQatLkdIGBq7koBS_HYvg7mN65KLRmoFJLmymnALq3fzqafi2HrxPEVe16-XMK1Pxo4UK_eSZelP8O-jfhSskjbH7hya0KZf78sP5CdR4rCp9640McvUuUuhzNVQ"/>
+</button>
+<!-- Thumbnail 13 -->
+<button aria-label="Photo 13" class="relative shrink-0 w-12 h-12 rounded-lg overflow-hidden opacity-60 hover:opacity-90 transition-opacity" type="button">
+<img class="w-full h-full object-cover" data-alt="Dense alpine forest wrapped in swirling sunset mist with vibrant amber horizon rays, ultra fine landscape details" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBANqGCpKTHhjaOIGYFNPfXC-U7wBpQL8p2DmUFoLEf85adkNUxkRAZB75mD8lrdIih1Eib6RwP-wMcAFHdk49IRPZt_9JhGzvRHQsDF1QmX-fndCaF0dCUw5nb5eZxmOePPLMBCPgVh_1uqO-MsNGKj_x7ZV1zeOh6CV8w6yU-mM1OkeFuB2YQ6uiBG-w-x23ArO2uYEMUfTyStV33fPzJ3S431I8kSW9G_BwGTyXsC24pkku4a9odVQ"/>
+</button>
+<!-- Thumbnail 14 (Current Active) -->
+<div class="relative shrink-0 w-14 h-14 rounded-lg overflow-hidden shadow-[0_0_12px_rgba(11,110,153,0.8)] scale-105 transition-transform bg-primary-container p-0.5">
+<img alt="Current photo: Misty mountain peaks" class="w-full h-full object-cover rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmtGKfZE0nLqOpbLKgIv6pjoUpdzjEO_RhPOF5iHIMqnmC_LarxfE8J1Ubr5YYrshVK0CS7ysslg9WSieobWqeEGztIOVsZA54H0s5YwpZZFRRhDysZHqeyJJ8hexn8g19GyvLwjBSdh0hkqeC06QJTXFfPrF4lSDxIsJLovpWhjUBudQPVyNqMZbySvRogUZIo_9HNtkbt9k3uw9IdnS6iNCrvJYA1y2aUFoQNQqL6_zXx9NsNiVHPQ"/>
+</div>
+<!-- Thumbnail 15 -->
+<button aria-label="Photo 15" class="relative shrink-0 w-12 h-12 rounded-lg overflow-hidden opacity-60 hover:opacity-90 transition-opacity" type="button">
+<img class="w-full h-full object-cover" data-alt="Snowcapped rocky peaks glowing in deep purple dusk light with reflections on calm glacial lake surface, ultra detailed 4k" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjlzZzDbO-vQvbjLsBSkvXtWnTQxC8i8kvSQyPgoly3OW5qKGkEQUqpzJdiQ3RQZ5FwnfzfX1nYf4uVobwsc-fH_O08y6esjLfziRG8FLIRXOJTLciwH9WiOt4yBz2ybM6E9FPra3Ndy2nrJ0JqrFvZG02XMMn6HFSNIliin8ZMSQoMkGASUT4ZEfzwyq2cbTf3SR7vI2MMDQSTPnSQibK0YkysD45U1iS4LJjPwHF8sq7Xd5IdliyXA"/>
+</button>
+<!-- Thumbnail 16 -->
+<button aria-label="Photo 16" class="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden opacity-40 hover:opacity-80 transition-opacity" type="button">
+<img class="w-full h-full object-cover" data-alt="High altitude panoramic starry night sky above rugged silhouette mountain ranges, celestial photography, vivid starlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7GZJxZeJoewrE02BTHUErNp9mc_aOA6INwRmgRnpqHKDUGcVKoRFAnlsnIt6IMrthyDoiAnY9_qWSW4nsG4HYMJ24I3G9PICtSLfLH49TS97PQfg6qAu_kqk2pd-NNki2GeO4VtzXlixN9jP4jKWNZXdipyJFLaqceeJ7z1w9jlP2EDmojY67wi3NykhxB7wOyZrlLWkJZOj7eA5xouJFevrKfnLRAWdmcAWdfaijgn0sy6zTmbzjbg"/>
+</button>
+</div>
+<!-- Quick Action Island -->
+<div class="relative z-10 mb-space-sm px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-xl flex items-center gap-space-sm shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+<!-- Edit -->
+<button aria-label="Edit image" class="flex flex-col items-center justify-center w-12 h-12 rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" type="button">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+<span class="font-label-sm text-[10px] tracking-tight -mt-0.5 text-outline-variant">Edit</span>
+</button>
+<!-- Favorite -->
+<button aria-label="Favorite image" class="flex flex-col items-center justify-center w-12 h-12 rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" id="favorite-btn" onclick="toggleFavorite(event)" type="button">
+<span class="material-symbols-outlined text-[22px] transition-colors" id="fav-icon">favorite_border</span>
+<span class="font-label-sm text-[10px] tracking-tight -mt-0.5 text-outline-variant">Favorite</span>
+</button>
+<!-- Rotate -->
+<button aria-label="Rotate image" class="flex flex-col items-center justify-center w-12 h-12 rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" id="rotate-btn" onclick="rotateImage(event)" type="button">
+<span class="material-symbols-outlined text-[22px]">rotate_right</span>
+<span class="font-label-sm text-[10px] tracking-tight -mt-0.5 text-outline-variant">Rotate</span>
+</button>
+<!-- Crop / Lens -->
+<button aria-label="Crop or Lens" class="flex flex-col items-center justify-center w-12 h-12 rounded-full text-on-primary hover:bg-surface-container-highest/20 active:scale-90 transition-all" type="button">
+<span class="material-symbols-outlined text-[22px]">crop</span>
+<span class="font-label-sm text-[10px] tracking-tight -mt-0.5 text-outline-variant">Crop</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive Logic for Zoom, Overlay Toggling, and Tool Behaviors -->
+<script>
+    (() => {
+      let isOverlayVisible = true;
+      let currentRotation = 0;
+      let isZoomed = false;
+      let isFavorited = false;
+      let lastTap = 0;
+
+      const topBar = document.getElementById('top-bar-overlay');
+      const bottomBar = document.getElementById('bottom-bar-overlay');
+      const imgTransform = document.getElementById('image-transform-wrapper');
+      const zoomChip = document.getElementById('zoom-chip');
+      const zoomText = document.getElementById('zoom-text');
+      const hint = document.getElementById('gesture-hint');
+      const infoDrawer = document.getElementById('info-drawer');
+      const infoBtn = document.getElementById('info-btn');
+
+      // Double-tap zoom logic on center viewport
+      const stage = document.getElementById('photo-stage');
+      stage.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+          e.preventDefault();
+          toggleZoom();
+        }
+        lastTap = currentTime;
+      });
+
+      // Show temporary discovery hint on load
+      setTimeout(() => {
+        if (hint) {
+          hint.classList.remove('opacity-0');
+          setTimeout(() => hint.classList.add('opacity-0'), 2500);
+        }
+      }, 600);
+
+      window.toggleOverlays = function() {
+        // If drawer is open, close it instead of hiding UI
+        if (!infoDrawer.classList.contains('translate-y-full')) {
+          infoDrawer.classList.add('translate-y-full');
+          return;
+        }
+
+        isOverlayVisible = !isOverlayVisible;
+        if (isOverlayVisible) {
+          topBar.style.transform = 'translateY(0)';
+          topBar.style.opacity = '1';
+          bottomBar.style.transform = 'translateY(0)';
+          bottomBar.style.opacity = '1';
+        } else {
+          topBar.style.transform = 'translateY(-100%)';
+          topBar.style.opacity = '0';
+          bottomBar.style.transform = 'translateY(100%)';
+          bottomBar.style.opacity = '0';
+        }
+      };
+
+      window.toggleZoom = function() {
+        isZoomed = !isZoomed;
+        applyTransforms();
+        
+        if (zoomChip) {
+          zoomText.innerText = isZoomed ? '200%' : '100%';
+          zoomChip.classList.remove('opacity-0');
+          setTimeout(() => zoomChip.classList.add('opacity-0'), 1500);
+        }
+      };
+
+      window.rotateImage = function(e) {
+        if (e) e.stopPropagation();
+        currentRotation = (currentRotation + 90) % 360;
+        applyTransforms();
+      };
+
+      function applyTransforms() {
+        const scaleVal = isZoomed ? 2 : 1;
+        imgTransform.style.transform = `scale(${scaleVal}) rotate(${currentRotation}deg)`;
+      }
+
+      window.toggleFavorite = function(e) {
+        if (e) e.stopPropagation();
+        isFavorited = !isFavorited;
+        const icon = document.getElementById('fav-icon');
+        if (isFavorited) {
+          icon.innerText = 'favorite';
+          icon.style.color = '#ffb956';
+          icon.style.fontVariationSettings = "'FILL' 1";
+        } else {
+          icon.innerText = 'favorite_border';
+          icon.style.color = '';
+          icon.style.fontVariationSettings = "'FILL' 0";
+        }
+      };
+
+      infoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        infoDrawer.classList.toggle('translate-y-full');
+      });
+
+      window.closeInfoDrawer = function(e) {
+        if (e) e.stopPropagation();
+        infoDrawer.classList.add('translate-y-full');
+      };
+    })();
+  </script>
+</div></main></body></html>

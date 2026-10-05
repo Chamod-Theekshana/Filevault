@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Roboto+Flex:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-primary-fixed": "#001e2e", "surface-bright": "#f8f9ff", "on-error": "#ffffff", "secondary-container": "#fdb244", "outline-variant": "#bfc7cf", "error": "#ba1a1a", "on-background": "#0b1c30", "surface-container-high": "#dce9ff", "secondary-fixed": "#ffddb5", "surface-container-lowest": "#ffffff", "on-surface-variant": "#40484e", "on-surface": "#0b1c30", "primary-container": "#0b6e99", "secondary-fixed-dim": "#ffb956", "on-secondary-fixed": "#2a1800", "inverse-surface": "#213145", "on-primary-container": "#cfeaff", "on-tertiary-fixed": "#00174b", "tertiary-fixed-dim": "#b4c5ff", "surface-tint": "#00658e", "background": "#f8f9ff", "on-secondary": "#ffffff", "on-primary": "#ffffff", "inverse-primary": "#84cfff", "tertiary-fixed": "#dbe1ff", "on-secondary-container": "#6e4600", "surface-dim": "#cbdbf5", "on-tertiary-fixed-variant": "#003ea8", "surface-container-low": "#eff4ff", "on-tertiary-container": "#e0e5ff", "outline": "#70787f", "on-secondary-fixed-variant": "#633f00", "on-error-container": "#93000a", "tertiary-container": "#185ce4", "primary-fixed": "#c7e7ff", "surface-container": "#e5eeff", "error-container": "#ffdad6", "surface-variant": "#d3e4fe", "surface-container-highest": "#d3e4fe", "tertiary": "#0045b9", "on-primary-fixed-variant": "#004c6c", "primary": "#005578", "surface": "#f8f9ff", "inverse-on-surface": "#eaf1ff", "primary-fixed-dim": "#84cfff", "on-tertiary": "#ffffff", "secondary": "#835400" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "space-lg": "1.5rem", "space-xl": "2rem", "gutter": "1rem", "margin": "1rem", "space-sm": "0.5rem", "space-xs": "0.25rem" }, fontFamily: { "headline-lg": ["Roboto Flex"], "code-sm": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Roboto Flex"], "headline-md": ["Roboto Flex"], "body-lg": ["Inter"], "body-md": ["Inter"], "body-sm": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"] }, fontSize: { "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="pt-safe"><div class="h-6 px-margin flex items-center justify-between text-on-surface select-none"><span class="font-label-md text-label-md font-semibold tracking-tight">:41</span><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px]">signal_cellular_4_bar</span><span class="material-symbols-outlined text-[16px]">wifi</span><span class="material-symbols-outlined text-[18px]">battery_full</span></div></div><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[24px]">shield</span></div><span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight leading-none"><span class="" style="letter-spacing: -0.7px;">FileVault</span></span></div><div class="flex items-center gap-space-xs"><button aria-label="Search" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[24px]">search</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface"><div class="flex flex-col w-full relative">
+<!-- BACKGROUND CONTEXT SCREEN (Simulated 'Download' Directory view under dim scrim) -->
+<div class="w-full px-margin opacity-40 blur-[1.5px] select-none pointer-events-none transition-all duration-300">
+<!-- Folder Breadcrumb / Path Header -->
+<div class="flex items-center justify-between py-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate leading-tight">Downloads</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Internal Storage • 42 items</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">sort</span>
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</div>
+</div>
+<!-- Active Selection Summary Bar -->
+<div class="w-full bg-primary-container/15 rounded-xl px-space-md py-space-sm flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-lg text-label-lg text-primary font-semibold">3 items selected</span>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant font-medium">18.6 MB</span>
+</div>
+<!-- Background File List Mock Items -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/50 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-[22px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate font-semibold">Quarterly_Report_2024.pdf</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">4.2 MB • Nov 12</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[22px]">image</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate font-semibold">IMG_Vault_Capture_804.jpg</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">8.9 MB • Today, 08:15</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary text-[22px]">code</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate font-semibold">project_assets_backup.json</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">5.5 MB • Nov 10</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<!-- MODAL SCRIM OVERLAY -->
+<div class="fixed inset-0 z-40 bg-black/55 backdrop-blur-[2px] transition-opacity duration-300" id="modal-scrim"></div>
+<!-- MATERIAL DESIGN 3 BOTTOM SHEET CONTAINER -->
+<div class="fixed inset-x-0 bottom-0 z-50 flex flex-col justify-end max-w-lg mx-auto pointer-events-none pb-20" id="bottom-sheet">
+<div class="pointer-events-auto bg-surface-container-lowest rounded-t-[28px] shadow-[0_-8px_32px_rgba(11,110,153,0.18)] max-h-[751px] overflow-y-auto overscroll-contain flex flex-col pt-space-xs">
+<!-- Top Center Drag Handle -->
+<div class="w-full flex items-center justify-center pt-2.5 pb-1">
+<div class="w-10 h-1.5 rounded-full bg-outline-variant/70"></div>
+</div>
+<!-- Sheet Header -->
+<div class="px-space-md pt-space-xs pb-space-sm flex items-start justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-11 h-11 rounded-2xl bg-primary-fixed flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 1;">folder_zip</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-md text-headline-md font-bold text-on-surface leading-tight tracking-tight">Create archive</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Compressing 3 items • 18.6 MB</span>
+</div>
+</div>
+</div>
+<button aria-label="Close dialog" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors shrink-0" id="btn-close-sheet">
+<span class="material-symbols-outlined text-[22px]">close</span>
+</button>
+</div>
+<!-- Form Content -->
+<div class="px-space-md space-y-space-md pb-space-sm">
+<!-- 1. Archive Name Input Field -->
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm font-semibold text-primary px-1">ARCHIVE NAME</span>
+<div class="w-full bg-surface-container-low rounded-xl px-space-md py-2.5 flex items-center justify-between transition-all focus-within:bg-surface-container-lowest focus-within:shadow-sm">
+<div class="flex items-center gap-space-sm flex-1 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px]">drive_file_rename_outline</span>
+<input class="w-full bg-transparent font-label-lg text-label-lg text-on-surface font-semibold focus:outline-none placeholder:text-outline-variant" id="archive-name-input" placeholder="Name your file" type="text" value="Backup_2024-11"/>
+</div>
+<div class="flex items-center gap-1.5 shrink-0 pl-space-xs">
+<button aria-label="Clear text" class="w-6 h-6 rounded-full bg-outline-variant/30 hover:bg-outline-variant/50 text-on-surface-variant flex items-center justify-center transition-colors" id="btn-clear-name">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+<span class="px-2 py-0.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-code-sm text-code-sm font-bold tracking-wide uppercase" id="extension-badge">.zip</span>
+</div>
+</div>
+</div>
+<!-- 2. Archive Format Selector (Segmented buttons) -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant">ARCHIVE FORMAT</span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold" id="format-tag">Universal Compatibility</span>
+</div>
+<div class="grid grid-cols-3 gap-2 bg-surface-container-low p-1.5 rounded-2xl">
+<!-- ZIP button -->
+<button class="format-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-primary text-on-primary shadow-sm transition-all" data-format="zip">
+<span class="font-label-lg text-label-lg font-bold">ZIP</span>
+<span class="font-label-sm text-label-sm opacity-85">Standard</span>
+</button>
+<!-- 7z button -->
+<button class="format-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl text-on-surface-variant hover:bg-surface-container-high/60 transition-all" data-format="7z">
+<span class="font-label-lg text-label-lg font-bold">7z</span>
+<span class="font-label-sm text-label-sm text-secondary">High Ratio</span>
+</button>
+<!-- TAR button -->
+<button class="format-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl text-on-surface-variant hover:bg-surface-container-high/60 transition-all" data-format="tar">
+<span class="font-label-lg text-label-lg font-bold">TAR</span>
+<span class="font-label-sm text-label-sm opacity-70">Uncompressed</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant px-1" id="format-helper">Recommended for general sharing; unpacks natively on Windows, macOS, and Android.</span>
+</div>
+<!-- 3. Compression Level Slider -->
+<div class="flex flex-col gap-2 bg-surface-container-low/70 p-space-md rounded-2xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">speed</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">COMPRESSION RATIO</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold" id="compression-badge">
+              Normal (Faster)
+            </span>
+</div>
+<!-- Interactive Range Slider -->
+<div class="relative py-2 flex flex-col gap-1.5">
+<input class="w-full h-2 rounded-lg bg-surface-container-highest appearance-none cursor-pointer accent-primary focus:outline-none" id="compression-range" max="3" min="0" step="1" type="range" value="1"/>
+<!-- Ticks Labels -->
+<div class="flex justify-between items-center px-0.5 text-on-surface-variant font-label-sm text-label-sm select-none">
+<span class="compression-tick opacity-70">Fast</span>
+<span class="compression-tick text-primary font-bold">Normal</span>
+<span class="compression-tick opacity-70">Maximum</span>
+<span class="compression-tick opacity-70">Ultra</span>
+</div>
+</div>
+</div>
+<!-- 4. Password Protection -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant">PASSWORD ENCRYPTION</span>
+<span class="font-label-sm text-label-sm text-primary font-medium">AES-256</span>
+</div>
+<div class="w-full bg-surface-container-low rounded-xl px-space-md py-2 flex items-center justify-between focus-within:bg-surface-container-lowest focus-within:shadow-sm transition-all">
+<div class="flex items-center gap-space-sm flex-1 min-w-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">lock</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none placeholder:text-outline" id="archive-password" placeholder="Set password (Optional)" type="password"/>
+</div>
+<button aria-label="Toggle password view" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" id="toggle-password-btn" type="button">
+<span class="material-symbols-outlined text-[20px]" id="password-eye-icon">visibility_off</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant px-1 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-primary">verified_user</span>
+            Leaves file filenames visible while locking content payloads.
+          </span>
+</div>
+<!-- 5. Split Archive & Post Actions Toggles -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<!-- Toggle: Delete after compress -->
+<label class="flex items-center justify-between p-space-sm rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline text-[20px]">auto_delete</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate">Delete source files after archive</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Frees up 18.6 MB on Internal Storage</span>
+</div>
+</div>
+<input class="w-5 h-5 rounded accent-primary cursor-pointer" id="toggle-delete" type="checkbox"/>
+</label>
+<!-- Toggle: Split archive into volumes -->
+<label class="flex items-center justify-between p-space-sm rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline text-[20px]">call_split</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate">Split into equal volumes</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Useful for email &amp; FAT32 media</span>
+</div>
+</div>
+<input class="w-5 h-5 rounded accent-primary cursor-pointer" id="toggle-split" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Modal Action Buttons Footer -->
+<div class="px-space-md pt-space-sm pb-space-lg flex items-center gap-space-md bg-surface-container-lowest mt-space-xs">
+<button class="flex-1 h-12 rounded-2xl bg-surface-container-high text-on-surface font-label-lg text-label-lg font-bold hover:bg-surface-container-highest transition-colors active:scale-95" id="btn-cancel" type="button">
+          Cancel
+        </button>
+<button class="flex-[1.5] h-12 rounded-2xl bg-primary text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:bg-primary/90 flex items-center justify-center gap-space-xs transition-all active:scale-95" id="btn-create-archive" type="button">
+<span class="material-symbols-outlined text-[20px]">archive</span>
+<span>Create archive</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Micro-Interactions Inline JS -->
+<script>
+    (function initArchiveModal() {
+      // 1. Format selector & extension update
+      const formatButtons = document.querySelectorAll('.format-btn');
+      const extBadge = document.getElementById('extension-badge');
+      const formatHelper = document.getElementById('format-helper');
+      const formatTag = document.getElementById('format-tag');
+
+      const formatMeta = {
+        zip: {
+          ext: '.zip',
+          tag: 'Universal Compatibility',
+          helper: 'Recommended for general sharing; unpacks natively on Windows, macOS, and Android.'
+        },
+        '7z': {
+          ext: '.7z',
+          tag: 'Ultra High Compression',
+          helper: 'High LZMA/LZMA2 compression ratio. Ideal for maximum storage savings.'
+        },
+        tar: {
+          ext: '.tar',
+          tag: 'Archive Packaging',
+          helper: 'Bundles files together without heavy compression. Very fast generation speed.'
+        }
+      };
+
+      formatButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          formatButtons.forEach(b => {
+            b.className = 'format-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl text-on-surface-variant hover:bg-surface-container-high/60 transition-all';
+          });
+          btn.className = 'format-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-primary text-on-primary shadow-sm transition-all';
+          
+          const fmt = btn.getAttribute('data-format');
+          if (formatMeta[fmt]) {
+            extBadge.textContent = formatMeta[fmt].ext;
+            formatTag.textContent = formatMeta[fmt].tag;
+            formatHelper.textContent = formatMeta[fmt].helper;
+          }
+        });
+      });
+
+      // 2. Clear Archive Name Input
+      const nameInput = document.getElementById('archive-name-input');
+      const clearBtn = document.getElementById('btn-clear-name');
+      clearBtn.addEventListener('click', () => {
+        nameInput.value = '';
+        nameInput.focus();
+      });
+
+      // 3. Compression Slider Ticks and Badge
+      const compressionSlider = document.getElementById('compression-range');
+      const compressionBadge = document.getElementById('compression-badge');
+      const compressionTicks = document.querySelectorAll('.compression-tick');
+      const levelLabels = [
+        'Fastest (Low)',
+        'Normal (Faster)',
+        'Maximum (Small size)',
+        'Ultra (Highest compression)'
+      ];
+
+      compressionSlider.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.value, 10);
+        compressionBadge.textContent = levelLabels[idx];
+        compressionTicks.forEach((tick, i) => {
+          if (i === idx) {
+            tick.className = 'compression-tick text-primary font-bold';
+          } else {
+            tick.className = 'compression-tick opacity-70';
+          }
+        });
+      });
+
+      // 4. Password Toggle
+      const passInput = document.getElementById('archive-password');
+      const passBtn = document.getElementById('toggle-password-btn');
+      const passIcon = document.getElementById('password-eye-icon');
+
+      passBtn.addEventListener('click', () => {
+        if (passInput.type === 'password') {
+          passInput.type = 'text';
+          passIcon.textContent = 'visibility';
+        } else {
+          passInput.type = 'password';
+          passIcon.textContent = 'visibility_off';
+        }
+      });
+
+      // 5. Dismiss / Action Mock Delight
+      const scrim = document.getElementById('modal-scrim');
+      const closeBtn = document.getElementById('btn-close-sheet');
+      const cancelBtn = document.getElementById('btn-cancel');
+      const createBtn = document.getElementById('btn-create-archive');
+      const bottomSheet = document.getElementById('bottom-sheet');
+
+      const dismissSheet = () => {
+        bottomSheet.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
+        bottomSheet.style.transform = 'translateY(100%)';
+        scrim.style.opacity = '0';
+        setTimeout(() => {
+          bottomSheet.style.display = 'none';
+          scrim.style.display = 'none';
+        }, 260);
+      };
+
+      [scrim, closeBtn, cancelBtn].forEach(el => {
+        if (el) el.addEventListener('click', dismissSheet);
+      });
+
+      createBtn.addEventListener('click', () => {
+        createBtn.innerHTML = `
+          <span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+          <span>Compressing...</span>
+        `;
+        setTimeout(() => {
+          dismissSheet();
+        }, 800);
+      });
+    })();
+  </script>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(11,110,153,0.06)]" data-active-classes="[&amp;_.pill]:bg-primary-fixed [&amp;_.pill]:text-on-primary-fixed [&amp;_span.material-symbols-outlined]:font-bold text-on-surface"><div class="h-20 px-space-xs flex items-center justify-around"><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 text-on-surface-variant hover:text-on-surface transition-all" data-path="vault-home" href="#"><div class="pill w-16 h-8 rounded-full flex items-center justify-center transition-colors"><span class="material-symbols-outlined text-[24px]">home</span></div><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 text-on-surface-variant hover:text-on-surface transition-all" data-path="browse-files" href="#"><div class="pill w-16 h-8 rounded-full flex items-center justify-center transition-colors"><span class="material-symbols-outlined text-[24px]">folder_open</span></div><span class="font-label-sm text-label-sm mt-0.5">Browse</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 text-on-surface-variant hover:text-on-surface transition-all" data-path="search-vault" href="#"><div class="pill w-16 h-8 rounded-full flex items-center justify-center transition-colors"><span class="material-symbols-outlined text-[24px]">search</span></div><span class="font-label-sm text-label-sm mt-0.5">Search</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 text-on-surface-variant hover:text-on-surface transition-all" data-path="vault-settings" href="#"><div class="pill w-16 h-8 rounded-full flex items-center justify-center transition-colors"><span class="material-symbols-outlined text-[24px]">settings</span></div><span class="font-label-sm text-label-sm mt-0.5">Settings</span></a></div></nav>
+</body></html>

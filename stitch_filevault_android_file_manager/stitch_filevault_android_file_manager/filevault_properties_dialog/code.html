@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Roboto+Flex:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container-low": "#eff4ff", "on-secondary-container": "#6e4600", "primary-fixed-dim": "#84cfff", "on-secondary-fixed-variant": "#633f00", "on-primary-fixed-variant": "#004c6c", "surface-bright": "#f8f9ff", "inverse-surface": "#213145", "tertiary-fixed-dim": "#b4c5ff", "inverse-on-surface": "#eaf1ff", "tertiary-fixed": "#dbe1ff", "secondary-fixed-dim": "#ffb956", "tertiary": "#0045b9", "on-error-container": "#93000a", "surface-container": "#e5eeff", "error-container": "#ffdad6", "surface-container-highest": "#d3e4fe", "primary-fixed": "#c7e7ff", "surface-tint": "#00658e", "surface-container-high": "#dce9ff", "error": "#ba1a1a", "on-tertiary": "#ffffff", "surface": "#f8f9ff", "secondary-container": "#fdb244", "on-primary": "#ffffff", "on-error": "#ffffff", "secondary-fixed": "#ffddb5", "primary": "#005578", "primary-container": "#0b6e99", "surface-dim": "#cbdbf5", "background": "#f8f9ff", "on-tertiary-container": "#e0e5ff", "inverse-primary": "#84cfff", "on-background": "#0b1c30", "outline": "#70787f", "surface-variant": "#d3e4fe", "surface-container-lowest": "#ffffff", "secondary": "#835400", "tertiary-container": "#185ce4", "on-secondary": "#ffffff", "on-tertiary-fixed": "#00174b", "outline-variant": "#bfc7cf", "on-tertiary-fixed-variant": "#003ea8", "on-surface-variant": "#40484e", "on-surface": "#0b1c30", "on-primary-fixed": "#001e2e", "on-secondary-fixed": "#2a1800", "on-primary-container": "#cfeaff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-md": "1rem", "margin": "1rem", "gutter": "1rem" }, fontFamily: { "body-lg": ["Inter"], "headline-md": ["Roboto Flex"], "body-sm": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"], "label-lg": ["Inter"], "code-sm": ["Inter"], "body-md": ["Inter"], "headline-sm": ["Roboto Flex"], "headline-lg": ["Roboto Flex"] }, fontSize: { "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "code-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen relative"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Close or Go Back" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">close</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface select-none">File Properties Dialog</h1></div><div class="flex items-center gap-space-xs"><button aria-label="More Options" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-safe"><div class="flex flex-col w-full relative">
+<!-- Blurred / Dimmed File Manager Background Representation -->
+<div aria-hidden="true" class="w-full px-margin pt-2 opacity-35 filter blur-[2px] pointer-events-none select-none">
+<div class="flex items-center justify-between mb-space-md">
+<div class="h-9 px-4 bg-surface-container-high rounded-full flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">folder</span>
+<span class="font-label-md text-label-md text-on-surface">Projects</span>
+</div>
+<div class="flex gap-2">
+<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
+</div>
+<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">grid_view</span>
+</div>
+</div>
+</div>
+<!-- Dummy file list items for background depth -->
+<div class="space-y-space-xs">
+<div class="h-16 px-space-md bg-surface-container-lowest rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">folder</span>
+</div>
+<div>
+<div class="font-headline-sm text-[14px] text-on-surface font-semibold">Q3 Financial Assets</div>
+<div class="font-body-sm text-body-sm text-outline">12 files • Oct 12</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<div class="h-16 px-space-md bg-surface-container-lowest rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div>
+<div class="font-headline-sm text-[14px] text-on-surface font-semibold">Project_Report_Final.pdf</div>
+<div class="font-body-sm text-body-sm text-outline">4.2 MB • Oct 14</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<div class="h-16 px-space-md bg-surface-container-lowest rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-11 h-11 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">image</span>
+</div>
+<div>
+<div class="font-headline-sm text-[14px] text-on-surface font-semibold">Architecture_Diagram.png</div>
+<div class="font-body-sm text-body-sm text-outline">1.8 MB • Oct 09</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+</div>
+</div>
+<!-- Modal Backdrop Scrim -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-30 transition-opacity"></div>
+<!-- Material Design 3 Dialog / Surface Container Card -->
+<div class="fixed inset-x-0 bottom-0 top-16 z-40 flex items-end justify-center p-3 sm:p-4 pointer-events-none">
+<section class="pointer-events-auto w-full max-w-[420px] max-h-[calc(100vh-5rem)] bg-surface-container-lowest rounded-[28px] shadow-[0_20px_40px_-8px_rgba(11,110,153,0.28)] flex flex-col overflow-hidden">
+<!-- Dialog Header Bar -->
+<div class="px-5 pt-5 pb-3 flex items-center justify-between bg-surface-container-lowest shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">info</span>
+<h2 class="font-headline-md text-[20px] text-on-surface">Properties</h2>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Copy File Summary" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" id="quickCopyAllBtn">
+<span class="material-symbols-outlined text-[20px]">content_copy</span>
+</button>
+<button aria-label="Add to Favorites" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" id="favoriteBtn">
+<span class="material-symbols-outlined text-[20px]">star</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Properties Body -->
+<div class="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
+<!-- Centered Hero Section with File Icon & Badges -->
+<div class="flex flex-col items-center text-center pt-1 pb-3 px-3 rounded-2xl bg-surface-container-low">
+<!-- Stylized File Icon with Soft Pastel Container & Primary Glow -->
+<div class="relative mb-3 mt-1">
+<div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(0,85,120,0.22)]">
+<span class="material-symbols-outlined text-primary text-[36px]" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-secondary-container text-[14px]">lock</span>
+</span>
+</div>
+<!-- File Name -->
+<h3 class="font-headline-sm text-headline-sm text-on-surface break-all select-all px-2" title="Project_Report_Final.pdf">
+            Project_Report_Final.pdf
+          </h3>
+<!-- Subtitle Badges -->
+<div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">picture_as_pdf</span>
+              PDF Document • 4.2 MB
+            </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-md text-label-md">
+<span class="material-symbols-outlined text-[13px]">verified_user</span>
+              Encrypted AES-256
+            </span>
+</div>
+</div>
+<!-- Structured Metadata Property Rows -->
+<div class="bg-surface-container-low rounded-2xl p-3 space-y-2">
+<!-- Row 1: Path -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-start justify-between gap-2 shadow-xs">
+<div class="flex items-start gap-3 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">folder_open</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Full Location</span>
+<span class="block font-body-sm text-body-sm text-on-surface break-all select-all">
+                  /Internal storage/Documents/Projects/Project_Report_Final.pdf
+                </span>
+</div>
+</div>
+<button aria-label="Copy Path" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 hover:bg-surface-container text-on-surface-variant" onclick="copyToClipboard('/Internal storage/Documents/Projects/Project_Report_Final.pdf')">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+<!-- Row 2: Type -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-start gap-3 shadow-xs">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">description</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">MIME Type &amp; Format</span>
+<span class="block font-body-sm text-body-sm text-on-surface">PDF Document (.pdf) • application/pdf</span>
+</div>
+</div>
+<!-- Row 3: Size -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-start gap-3 shadow-xs">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">data_usage</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Size on Storage</span>
+<span class="block font-body-sm text-body-sm text-on-surface">4,218,890 bytes (4.2 MB on disk)</span>
+</div>
+</div>
+<!-- Row 4: Modified / Created -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-start gap-3 shadow-xs">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">event</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Timestamps</span>
+<span class="block font-body-sm text-body-sm text-on-surface">Oct 14, 2024, 02:45 PM</span>
+<span class="block font-body-sm text-body-sm text-outline">Created: Oct 10, 2024, 09:12 AM</span>
+</div>
+</div>
+<!-- Row 5: Permissions -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-start gap-3 shadow-xs">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">security</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Access Control</span>
+<span class="block font-code-sm text-code-sm text-on-surface">-rw-r--r-- (Read &amp; Write • Owner)</span>
+</div>
+</div>
+<!-- Row 6: MD5 Checksum with Action -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest flex items-center justify-between gap-2 shadow-xs">
+<div class="flex items-start gap-3 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">fingerprint</span>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">MD5 Checksum</span>
+<span class="block font-code-sm text-code-sm text-on-surface truncate max-w-[170px]" id="checksumDisplay" title="e3b0c44298fc1c149afbf4c8996fb924">
+                  e3b0c44298fc1c14...
+                </span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm flex items-center gap-1 hover:bg-primary-fixed-dim transition-colors shrink-0" id="verifyChecksumBtn">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+              Verify
+            </button>
+</div>
+</div>
+<!-- Collapsible Parent Folder Summary Section -->
+<div class="rounded-2xl bg-surface-container p-3 space-y-2.5">
+<button class="w-full flex items-center justify-between text-left" id="folderToggleBtn">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">folder_copy</span>
+<span class="font-label-lg text-label-lg text-on-surface">Parent Folder: Projects</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform" id="toggleIcon">expand_less</span>
+</button>
+<!-- Folder Metrics Highlight Box -->
+<div class="pt-1 border-t-0 space-y-2" id="folderDetailsPanel">
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2.5 rounded-xl bg-surface-container-lowest">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Contents</span>
+<span class="block font-headline-sm text-[15px] text-on-surface mt-0.5">24 Items</span>
+<span class="block font-body-sm text-body-sm text-outline">18 files, 6 folders</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-lowest">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Parent Size</span>
+<span class="block font-headline-sm text-[15px] text-on-surface mt-0.5">142.8 MB</span>
+<span class="block font-body-sm text-body-sm text-outline">Internal storage</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Toast notification feedback bar (hidden by default) -->
+<div class="hidden px-3 py-2 rounded-xl bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm text-center shadow-lg transition-all" id="copyToast">
+          Copied to clipboard
+        </div>
+</div>
+<!-- Dialog Footer / Bottom Action -->
+<div class="p-4 bg-surface-container-lowest shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.03)]">
+<button class="w-full h-12 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-primary transition-all active:scale-[0.98] shadow-sm" id="closePropertiesDialog" onclick="history.back()">
+<span>Close</span>
+</button>
+</div>
+</section>
+</div>
+</div>
+<script>
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    showToast('Path copied to clipboard');
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('copyToast');
+    if (toast) {
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2200);
+    }
+  }
+
+  const quickCopyAll = document.getElementById('quickCopyAllBtn');
+  if (quickCopyAll) {
+    quickCopyAll.addEventListener('click', () => {
+      const summary = "Project_Report_Final.pdf\nPath: /Internal storage/Documents/Projects/Project_Report_Final.pdf\nSize: 4.2 MB (4,218,890 bytes)\nMD5: e3b0c44298fc1c149afbf4c8996fb924";
+      if (navigator.clipboard) navigator.clipboard.writeText(summary);
+      showToast('File summary copied');
+    });
+  }
+
+  const verifyBtn = document.getElementById('verifyChecksumBtn');
+  if (verifyBtn) {
+    verifyBtn.addEventListener('click', () => {
+      const checksumSpan = document.getElementById('checksumDisplay');
+      if (checksumSpan) {
+        checksumSpan.textContent = 'e3b0c44298fc1c149afbf4c8996fb924';
+        checksumSpan.classList.remove('truncate');
+        verifyBtn.innerHTML = '<span class="material-symbols-outlined text-[15px]">done</span> Valid';
+        verifyBtn.classList.remove('bg-primary-fixed', 'text-on-primary-fixed');
+        verifyBtn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+        showToast('Checksum successfully verified (MD5 match)');
+      }
+    });
+  }
+
+  const folderToggleBtn = document.getElementById('folderToggleBtn');
+  const folderPanel = document.getElementById('folderDetailsPanel');
+  const toggleIcon = document.getElementById('toggleIcon');
+  if (folderToggleBtn && folderPanel && toggleIcon) {
+    folderToggleBtn.addEventListener('click', () => {
+      const isHidden = folderPanel.classList.toggle('hidden');
+      toggleIcon.textContent = isHidden ? 'expand_more' : 'expand_less';
+    });
+  }
+
+  const favBtn = document.getElementById('favoriteBtn');
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      const icon = favBtn.querySelector('.material-symbols-outlined');
+      if (icon) {
+        const isFilled = icon.style.fontVariationSettings?.includes("'FILL' 1");
+        icon.style.fontVariationSettings = isFilled ? "'FILL' 0" : "'FILL' 1";
+        favBtn.classList.toggle('text-secondary');
+        showToast(isFilled ? 'Removed from starred' : 'Starred file');
+      }
+    });
+  }
+</script></main></body></html>
