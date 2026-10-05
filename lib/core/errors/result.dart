@@ -1,11 +1,10 @@
 import 'package:filevault/core/errors/failure.dart';
 
-/// Result wrapper so exceptions never leak into widgets or ViewModels.
+/// Lightweight result type so repositories never leak exceptions.
 sealed class Result<T> {
   const Result();
 
   bool get isSuccess => this is Success<T>;
-
   bool get isFailure => this is Err<T>;
 
   T? get valueOrNull => switch (this) {
@@ -27,16 +26,23 @@ sealed class Result<T> {
       Err<T>(:final Failure failure) => onFailure(failure),
     };
   }
+
+  /// Runs [body] and wraps thrown errors into an [Err].
+  static Future<Result<T>> guard<T>(Future<T> Function() body) async {
+    try {
+      return Success<T>(await body());
+    } catch (error) {
+      return Err<T>(Failure.fromException(error));
+    }
+  }
 }
 
 final class Success<T> extends Result<T> {
   const Success(this.value);
-
   final T value;
 }
 
 final class Err<T> extends Result<T> {
   const Err(this.failure);
-
   final Failure failure;
 }

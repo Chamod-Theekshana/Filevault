@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Exact Stitch FileVault color tokens for light and dark schemes.
+/// Colour tokens taken 1:1 from the FileVault Stitch design system
+/// (light + dark). Never use raw hex values in widgets – reference these.
 abstract final class AppColors {
+  // ----------------------------------------------------------- light
   static const Color lightSurface = Color(0xFFF8F9FF);
   static const Color lightSurfaceDim = Color(0xFFCBDBF5);
   static const Color lightSurfaceBright = Color(0xFFF8F9FF);
@@ -42,13 +44,11 @@ abstract final class AppColors {
   static const Color lightSecondaryFixedDim = Color(0xFFFFB956);
   static const Color lightOnSecondaryFixed = Color(0xFF2A1800);
   static const Color lightOnSecondaryFixedVariant = Color(0xFF633F00);
-  static const Color lightTertiaryFixed = Color(0xFFDBE1FF);
-  static const Color lightTertiaryFixedDim = Color(0xFFB4C5FF);
-  static const Color lightOnTertiaryFixed = Color(0xFF00174B);
-  static const Color lightOnTertiaryFixedVariant = Color(0xFF003EA8);
-  static const Color lightBackground = Color(0xFFF8F9FF);
-  static const Color lightOnBackground = Color(0xFF0B1C30);
+  static const Color lightChipFill = Color(0xFFEEF2F5);
+  static const Color lightChipText = Color(0xFF64748B);
+  static const Color lightAmber = Color(0xFFF2A93B);
 
+  // ------------------------------------------------------------ dark
   static const Color darkSurface = Color(0xFF101418);
   static const Color darkSurfaceDim = Color(0xFF101418);
   static const Color darkSurfaceBright = Color(0xFF363A40);
@@ -89,10 +89,15 @@ abstract final class AppColors {
   static const Color darkSecondaryFixedDim = Color(0xFFFFB956);
   static const Color darkOnSecondaryFixed = Color(0xFF2A1800);
   static const Color darkOnSecondaryFixedVariant = Color(0xFF643F00);
-  static const Color darkTertiaryFixed = Color(0xFFDBE1FF);
-  static const Color darkTertiaryFixedDim = Color(0xFFB4C5FF);
-  static const Color darkOnTertiaryFixed = Color(0xFF021848);
-  static const Color darkOnTertiaryFixedVariant = Color(0xFF334576);
-  static const Color darkBackground = Color(0xFF101418);
-  static const Color darkOnBackground = Color(0xFFE0E3E8);
+  static const Color darkAccent = Color(0xFF38BDF8);
+  static const Color darkAmber = Color(0xFFFFB956);
+
+  // Accent presets offered in Settings.
+  static const List<int> accentPresets = <int>[
+    0xFF0B6E99,
+    0xFF2E7D32,
+    0xFF6750A4,
+    0xFFC2185B,
+    0xFFE65100,
+  ];
 }

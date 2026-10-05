@@ -1,51 +1,61 @@
 import 'package:filevault/core/extensions/context_extensions.dart';
 import 'package:filevault/core/router/app_routes.dart';
-import 'package:filevault/core/theme/app_colors.dart';
-import 'package:filevault/domain/models/storage_permission_status.dart';
 import 'package:filevault/features/onboarding/onboarding_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class SplashView extends ConsumerWidget {
+/// Brand splash shown while the permission state is read.
+class SplashView extends ConsumerStatefulWidget {
   const SplashView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(onboardingViewModelProvider, (_, next) {
-      if (next.status == StoragePermissionStatus.unknown) {
-        return;
-      }
-      if (next.status.canEnterApp) {
-        context.go(AppRoutes.home);
-      } else {
-        context.go(AppRoutes.onboarding);
-      }
+  ConsumerState<SplashView> createState() => _SplashViewState();
+}
+
+class _SplashViewState extends ConsumerState<SplashView> {
+  bool _navigated = false;
+
+  void _decide(OnboardingState state) {
+    if (_navigated || !state.checked) return;
+    _navigated = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go(state.canEnterApp ? AppRoutes.home : AppRoutes.onboarding);
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<OnboardingState>(onboardingProvider, (_, OnboardingState next) => _decide(next));
+    _decide(ref.watch(onboardingProvider));
     return Scaffold(
       body: Center(
         child: Semantics(
-          label: context.l10n.splashSemantics,
+          label: context.l10n.appName,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Container(
-                width: 72,
-                height: 72,
+                width: 88,
+                height: 88,
                 decoration: BoxDecoration(
-                  color: context.isDark
-                      ? AppColors.darkPrimaryContainer
-                      : AppColors.lightPrimaryFixed,
-                  borderRadius: BorderRadius.circular(20),
+                  color: context.colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: <BoxShadow>[context.tokens.fabShadow],
                 ),
-                child: Icon(
-                  Icons.shield,
-                  size: 36,
-                  color: context.isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                child: Icon(Icons.shield_outlined, size: 44, color: context.colors.onPrimary),
+              ),
+              const SizedBox(height: 20),
+              Text(context.l10n.appName, style: context.texts.headlineLarge),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: 120,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: const LinearProgressIndicator(minHeight: 4),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(context.l10n.appName, style: context.texts.headlineLarge),
             ],
           ),
         ),

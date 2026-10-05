@@ -48,7 +48,7 @@ String categoryCountSize(CategorySummary summary) {
 
 String _formatCount(int count) {
   if (count >= 1000) {
-    return '${(count / 1000).toStringAsFixed(count >= 10000 ? 0 : 2).replaceAll('.00', '')}'
+    return (count / 1000).toStringAsFixed(count >= 10000 ? 0 : 2).replaceAll('.00', '')
         .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
   }
   return '$count';

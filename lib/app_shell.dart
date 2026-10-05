@@ -9,14 +9,14 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
+    return const Scaffold(
       body: Stack(
         children: [
           // The main content
-          const BrowserView(),
+          BrowserView(),
           
           // The floating operation progress panel
-          const OperationProgressPanel(),
+          OperationProgressPanel(),
         ],
       ),
     );

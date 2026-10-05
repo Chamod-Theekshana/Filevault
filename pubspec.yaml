@@ -1,66 +1,67 @@
 name: filevault
-description: Android file manager with Material You FileVault UI.
+description: FileVault – a fast, private Android file manager with a secure folder.
 publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.13.4
+  sdk: ^3.8.0
 
 dependencies:
-  flutter:
-    sdk: flutter
   flutter_localizations:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  # State & navigation
   flutter_riverpod: ^2.6.1
   go_router: ^16.2.4
-  freezed_annotation: ^3.1.0
-  json_annotation: ^4.9.0
-  equatable: ^2.0.7
-  drift: ^2.28.2
-  drift_flutter: ^0.2.7
-  sqlite3_flutter_libs: ^0.5.39
-  path_provider: ^2.1.5
-  path: ^1.9.1
+
+  # Storage / persistence
+  sqflite: ^2.4.1
   shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
+  path: ^1.9.1
+  path_provider: ^2.1.5
+
+  # Platform
   permission_handler: ^12.0.1
+  device_info_plus: ^11.5.0
+  package_info_plus: ^8.3.1
+  local_auth: ^2.3.0
   open_filex: ^4.7.0
   share_plus: ^11.1.0
-  file_picker: ^10.3.3
+
+  # Files, archives, crypto
   mime: ^2.0.0
   archive: ^4.0.7
-  photo_manager: ^3.7.1
-  video_thumbnail: ^0.5.6
+  crypto: ^3.0.6
+  pointycastle: ^3.9.1
+
+  # Media viewers
+  photo_view: ^0.15.0
   video_player: ^2.10.0
   chewie: ^1.13.0
   just_audio: ^0.10.5
-  photo_view: ^0.15.0
   pdfx: ^2.9.2
-  crypto: ^3.0.6
-  flutter_foreground_task: ^9.1.0
-  flutter_local_notifications: ^19.4.2
-  device_info_plus: ^11.5.0
-  package_info_plus: ^8.3.1
-  intl: any
-  logger: ^2.6.1
-  google_fonts: ^6.3.2
+
+  # Misc
+  intl: ^0.20.2
   collection: ^1.19.1
-  meta: ^1.16.0
-  uuid: ^4.6.0
+  logger: ^2.6.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  integration_test:
-    sdk: flutter
   flutter_lints: ^6.0.0
-  build_runner: ^2.7.1
-  freezed: ^3.2.3
-  json_serializable: ^6.11.1
-  drift_dev: ^2.28.3
   mocktail: ^1.0.4
 
 flutter:
   generate: true
   uses-material-design: true
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+    - family: RobotoFlex
+      fonts:
+        - asset: assets/fonts/RobotoFlex-Variable.ttf

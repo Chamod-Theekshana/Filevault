@@ -1,163 +1,205 @@
-import 'dart:io';
+import 'package:filevault/core/extensions/context_extensions.dart';
+import 'package:filevault/core/utils/date_formatter.dart';
+import 'package:filevault/core/utils/file_size_formatter.dart';
+import 'package:filevault/core/utils/file_utils.dart';
+import 'package:filevault/core/widgets/fv_common.dart';
+import 'package:filevault/core/widgets/fv_thumbnail.dart';
+import 'package:filevault/domain/models/file_entry.dart';
+import 'package:filevault/domain/models/file_operation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:intl/intl.dart';
 
-import '../../../core/utils/file_utils.dart';
-import '../models/conflict_resolution.dart';
-
-class ConflictDialog extends StatefulWidget {
-  final String conflictFilePath;
-  final void Function(ConflictResolution resolution, bool applyAll) onResolve;
-
-  const ConflictDialog({
-    super.key,
-    required this.conflictFilePath,
-    required this.onResolve,
-  });
-
-  @override
-  State<ConflictDialog> createState() => _ConflictDialogState();
+/// Replace / Skip / Keep both sheet shown when a destination already exists.
+Future<ConflictDecision?> showConflictDialog(BuildContext context, ConflictInfo info) {
+  return showModalBottomSheet<ConflictDecision>(
+    context: context,
+    isScrollControlled: true,
+    isDismissible: false,
+    enableDrag: false,
+    builder: (BuildContext context) => _ConflictSheet(info: info),
+  );
 }
 
-class _ConflictDialogState extends State<ConflictDialog> {
-  bool _applyAll = false;
-  FileStat? _existingStat;
-  FileStat? _newStat; // Typically we don't have new stat if it's coming from stream, but let's assume we can get it if it's a direct copy. We'll leave it simple for now.
+class _ConflictSheet extends StatefulWidget {
+  const _ConflictSheet({required this.info});
+
+  final ConflictInfo info;
 
   @override
-  void initState() {
-    super.initState();
-    _loadStats();
-  }
-  
-  Future<void> _loadStats() async {
-    final stat = await FileStat.stat(widget.conflictFilePath);
-    setState(() {
-      _existingStat = stat;
-    });
-  }
+  State<_ConflictSheet> createState() => _ConflictSheetState();
+}
+
+class _ConflictSheetState extends State<_ConflictSheet> {
+  bool _applyToAll = false;
+
+  void _choose(ConflictResolution r) =>
+      Navigator.of(context).pop(ConflictDecision(r, applyToAll: _applyToAll));
+
+  FileEntry _entry(String path, int size, DateTime modified) => FileEntry(
+        path: path,
+        name: p.basename(path),
+        isDirectory: false,
+        size: size,
+        modified: modified,
+        category: FileUtils.categoryFor(p.basename(path)),
+        extension: FileUtils.extensionOf(p.basename(path)),
+        mimeType: FileUtils.mimeFor(p.basename(path)),
+      );
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final fileName = p.basename(widget.conflictFilePath);
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: colorScheme.surface,
+    final ConflictInfo info = widget.info;
+    final String name = p.basename(info.destinationPath);
+    return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: colorScheme.secondaryContainer,
-              child: Icon(Icons.drive_file_rename_outline, color: colorScheme.onSecondaryContainer),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(context.l10n.conflictTitle, style: context.texts.headlineSmall),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.conflictBody(name),
+              style: context.texts.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
-            Text('File already exists', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                children: [
-                  const TextSpan(text: 'A file named '),
-                  TextSpan(text: fileName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const TextSpan(text: ' already exists in this folder.'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Stats comparison
-            if (_existingStat != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceVariant.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Existing size:', style: TextStyle(fontSize: 12)),
-                        Text(FileUtils.formatBytes(_existingStat!.size, 1), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Existing date:', style: TextStyle(fontSize: 12)),
-                        Text(DateFormat('MMM d, yyyy HH:mm').format(_existingStat!.modified), style: const TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              
-            const SizedBox(height: 16),
-            
-            // Checkbox
-            CheckboxListTile(
-              value: _applyAll,
-              onChanged: (val) {
-                setState(() => _applyAll = val ?? false);
-              },
-              title: const Text('Apply to remaining conflicts', style: TextStyle(fontSize: 14)),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Buttons
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                widget.onResolve(ConflictResolution.replace, _applyAll);
-              },
-              icon: const Icon(Icons.swap_horiz),
-              label: const Text('Replace existing'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
-              children: [
+              children: <Widget>[
                 Expanded(
-                  child: FilledButton.tonalIcon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onResolve(ConflictResolution.keepBoth, _applyAll);
-                    },
-                    icon: const Icon(Icons.copy_all, size: 18),
-                    label: const Text('Keep both', style: TextStyle(fontSize: 13)),
-                    style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+                  child: _VersionCard(
+                    label: context.l10n.existing,
+                    entry: _entry(info.destinationPath, info.destinationSize, info.destinationModified),
+                    highlight: false,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onResolve(ConflictResolution.skip, _applyAll);
-                    },
-                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                    child: const Text('Skip file', style: TextStyle(fontSize: 13)),
+                  child: _VersionCard(
+                    label: context.l10n.incoming,
+                    entry: _entry(info.sourcePath, info.sourceSize, info.sourceModified),
+                    highlight: true,
+                    delta: info.sourceSize - info.destinationSize,
                   ),
                 ),
               ],
             ),
+            if (info.remaining > 0) ...<Widget>[
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                value: _applyToAll,
+                onChanged: (bool? v) => setState(() => _applyToAll = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.l10n.conflictApplyToAll, style: context.texts.titleSmall),
+                subtitle: Text(context.l10n.conflictPending(info.remaining)),
+              ),
+            ],
+            const SizedBox(height: 8),
+            FvFilledButton(
+              label: context.l10n.conflictReplace,
+              icon: Icons.swap_horiz,
+              onPressed: () => _choose(ConflictResolution.replace),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _choose(ConflictResolution.skip),
+                    child: Text(context.l10n.conflictSkip),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _choose(ConflictResolution.keepBoth),
+                    child: Text(context.l10n.conflictKeepBoth),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(context.l10n.cancel),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _VersionCard extends StatelessWidget {
+  const _VersionCard({
+    required this.label,
+    required this.entry,
+    required this.highlight,
+    this.delta,
+  });
+
+  final String label;
+  final FileEntry entry;
+  final bool highlight;
+  final int? delta;
+
+  @override
+  Widget build(BuildContext context) {
+    final int? d = delta;
+    return FvCard(
+      padding: const EdgeInsets.all(12),
+      color: highlight
+          ? (context.isDark
+              ? context.colors.primaryContainer.withValues(alpha: 0.3)
+              : context.colors.primaryFixed.withValues(alpha: 0.4))
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label.toUpperCase(),
+            style: context.texts.labelSmall?.copyWith(color: context.colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          Center(child: FvThumbnail(entry: entry, size: 72, radius: 14)),
+          const SizedBox(height: 10),
+          Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.texts.titleSmall),
+          const SizedBox(height: 4),
+          Row(
+            children: <Widget>[
+              Icon(Icons.sd_storage_outlined, size: 14, color: context.colors.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Text(FileSizeFormatter.format(entry.size), style: context.texts.bodySmall),
+              if (d != null && d != 0) ...<Widget>[
+                const SizedBox(width: 6),
+                Text(
+                  '${d > 0 ? '+' : '−'}${FileSizeFormatter.format(d.abs())}',
+                  style: context.texts.labelSmall?.copyWith(
+                    color: d > 0 ? context.tokens.success : context.colors.error,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Icon(Icons.schedule, size: 14, color: context.colors.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  DateFormatter.relative(entry.modified,
+                      today: context.l10n.today, yesterday: context.l10n.yesterday),
+                  style: context.texts.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

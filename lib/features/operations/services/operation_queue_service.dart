@@ -99,7 +99,7 @@ class OperationQueueService extends StateNotifier<OperationQueueState> {
     _applyAllConflicts = false;
     _defaultConflictResolution = null;
 
-    var task = state.tasks[nextTaskIndex].copyWith(status: OperationStatus.running);
+    final task = state.tasks[nextTaskIndex].copyWith(status: OperationStatus.running);
     final newTasks = List<OperationTask>.from(state.tasks);
     newTasks[nextTaskIndex] = task;
     state = state.copyWith(tasks: newTasks);
@@ -140,7 +140,7 @@ class OperationQueueService extends StateNotifier<OperationQueueState> {
   }
 
   Future<void> _executeDelete(OperationTask task) async {
-    int totalFiles = task.sourcePaths.length;
+    final int totalFiles = task.sourcePaths.length;
     _updateTask(task.id, (t) => t.copyWith(totalFiles: totalFiles));
 
     int processed = 0;
@@ -344,7 +344,7 @@ class OperationQueueService extends StateNotifier<OperationQueueState> {
     
     int totalCopied = 0;
     try {
-      final bufferSize = 1024 * 64; // 64KB chunk
+      const bufferSize = 1024 * 64; // 64KB chunk
       while (true) {
         await _checkPauseCancel();
         if (_isCancelled) break;

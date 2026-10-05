@@ -1,11 +1,45 @@
-import 'package:filevault/core/di/repository_providers.dart';
-import 'package:filevault/domain/models/storage_permission_status.dart';
-import 'package:filevault/domain/repositories/permission_repository.dart';
-import 'package:filevault/features/onboarding/onboarding_state.dart';
+import 'package:filevault/core/di/providers.dart';
+import 'package:filevault/domain/models/app_settings.dart';
+import 'package:filevault/domain/repositories/settings_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final NotifierProvider<OnboardingViewModel, OnboardingState>
-    onboardingViewModelProvider =
+class OnboardingState {
+  const OnboardingState({
+    this.status = StoragePermissionStatus.unknown,
+    this.busy = false,
+    this.usesAllFilesAccess = true,
+    this.onboardingDone = false,
+    this.checked = false,
+  });
+
+  final StoragePermissionStatus status;
+  final bool busy;
+  final bool usesAllFilesAccess;
+  final bool onboardingDone;
+
+  /// True once the first status read completed (splash can decide).
+  final bool checked;
+
+  bool get canEnterApp => status == StoragePermissionStatus.granted || onboardingDone;
+
+  OnboardingState copyWith({
+    StoragePermissionStatus? status,
+    bool? busy,
+    bool? usesAllFilesAccess,
+    bool? onboardingDone,
+    bool? checked,
+  }) {
+    return OnboardingState(
+      status: status ?? this.status,
+      busy: busy ?? this.busy,
+      usesAllFilesAccess: usesAllFilesAccess ?? this.usesAllFilesAccess,
+      onboardingDone: onboardingDone ?? this.onboardingDone,
+      checked: checked ?? this.checked,
+    );
+  }
+}
+
+final NotifierProvider<OnboardingViewModel, OnboardingState> onboardingProvider =
     NotifierProvider<OnboardingViewModel, OnboardingState>(OnboardingViewModel.new);
 
 class OnboardingViewModel extends Notifier<OnboardingState> {
@@ -15,33 +49,48 @@ class OnboardingViewModel extends Notifier<OnboardingState> {
     return const OnboardingState();
   }
 
-  PermissionRepository get _repo => ref.read(permissionRepositoryProvider);
+  PermissionRepository get _permissions => ref.read(permissionRepositoryProvider);
+  SettingsRepository get _settings => ref.read(settingsRepositoryProvider);
 
   Future<void> refresh() async {
-    state = state.copyWith(isBusy: true);
-    final StoragePermissionStatus status = await _repo.currentStatus();
-    state = state.copyWith(status: status, isBusy: false);
+    final StoragePermissionStatus status = await _permissions.currentStatus();
+    final bool allFiles = await _permissions.usesAllFilesAccess;
+    final bool done = await _settings.isOnboardingDone();
+    state = state.copyWith(
+      status: status,
+      usesAllFilesAccess: allFiles,
+      onboardingDone: done,
+      checked: true,
+      busy: false,
+    );
   }
 
   Future<void> grantAccess() async {
-    state = state.copyWith(isBusy: true);
-    final StoragePermissionStatus status = await _repo.request();
+    state = state.copyWith(busy: true);
+    StoragePermissionStatus status = await _permissions.request();
     if (status == StoragePermissionStatus.permanentlyDenied) {
-      await _repo.openSystemSettings();
+      await _permissions.openSystemSettings();
+      status = await _permissions.currentStatus();
     }
-    final StoragePermissionStatus latest = await _repo.currentStatus();
-    state = state.copyWith(status: latest, isBusy: false);
-  }
-
-  Future<void> skip() async {
-    await _repo.skipOnboarding();
-    state = state.copyWith(status: StoragePermissionStatus.skipped, isBusy: false);
+    if (status == StoragePermissionStatus.granted) {
+      await _settings.setOnboardingDone(true);
+      await _permissions.ensureNotificationPermission();
+    }
+    state = state.copyWith(
+      status: status,
+      busy: false,
+      onboardingDone: status == StoragePermissionStatus.granted || state.onboardingDone,
+    );
   }
 
   Future<void> openSettings() async {
-    state = state.copyWith(isBusy: true);
-    await _repo.openSystemSettings();
-    final StoragePermissionStatus status = await _repo.currentStatus();
-    state = state.copyWith(status: status, isBusy: false);
+    state = state.copyWith(busy: true);
+    await _permissions.openSystemSettings();
+    await refresh();
+  }
+
+  Future<void> skip() async {
+    await _settings.setOnboardingDone(true);
+    state = state.copyWith(onboardingDone: true);
   }
 }

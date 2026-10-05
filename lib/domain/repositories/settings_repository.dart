@@ -1,20 +1,26 @@
 import 'package:filevault/domain/models/app_settings.dart';
 
-/// Persisted user preferences. The filesystem is never stored here.
+/// Persisted user preferences.
 abstract class SettingsRepository {
   Future<AppSettings> load();
 
-  Future<void> saveThemeMode(AppThemeMode mode);
+  Future<void> save(AppSettings settings);
 
-  Future<void> saveAccentColor(int argb);
+  Future<bool> isOnboardingDone();
 
-  Future<void> saveShowHidden(bool value);
+  Future<void> setOnboardingDone(bool done);
+}
 
-  Future<void> saveTrashAutoCleanDays(int days);
+/// Storage permission state and requests.
+abstract class PermissionRepository {
+  Future<StoragePermissionStatus> currentStatus();
 
-  Future<void> saveConfirmBeforeDelete(bool value);
+  Future<StoragePermissionStatus> request();
 
-  Future<void> saveDefaultViewMode(String mode);
+  Future<void> openSystemSettings();
 
-  Future<void> saveDefaultSort(String sort);
+  /// True on Android 11+ where "All files access" is the relevant grant.
+  Future<bool> get usesAllFilesAccess;
+
+  Future<void> ensureNotificationPermission();
 }
