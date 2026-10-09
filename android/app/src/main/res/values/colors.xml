@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="fv_splash_background">#F8F9FF</color>
+    <!-- Must match the Flutter splash/background (AppColors.lightSurface). -->
+    <color name="fv_splash_background">#F7F6F3</color>
     <color name="fv_splash_tint">#0B6E99</color>
 </resources>

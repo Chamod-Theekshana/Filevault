@@ -1,4 +1,4 @@
-import 'package:filevault/core/theme/category_colors.dart';
+import 'package:filevault/domain/models/file_category.dart';
 import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/domain/models/file_entity.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -6,7 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'home_state.freezed.dart';
 
 @freezed
-class HomeState with _$HomeState {
+abstract class HomeState with _$HomeState {
   const HomeState._();
 
   const factory HomeState({

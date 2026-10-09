@@ -5,6 +5,7 @@ import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/widgets/fv_common.dart';
 import 'package:filevault/domain/models/file_operation.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
+import 'package:filevault/features/operations/undo_trash.dart';
 import 'package:filevault/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +35,7 @@ String operationErrorText(AppLocalizations l10n, String? code) => switch (code) 
       'cancelled' => l10n.errorCancelled,
       'sameFolder' => l10n.errorSameFolder,
       'intoItself' => l10n.errorIntoItself,
+      'vaultLocked' => l10n.errorVaultLocked,
       _ => l10n.errorIo,
     };
 
@@ -63,7 +65,11 @@ class _OperationProgressPanelState extends ConsumerState<OperationProgressPanel>
     if (_lastShownFinished == last.id) return;
     _lastShownFinished = last.id;
     _dismissTimer?.cancel();
-    _dismissTimer = Timer(const Duration(seconds: 5), () {
+    final Duration visible = last.type == OperationType.trash &&
+            last.status == OperationStatus.completed
+        ? const Duration(seconds: 8)
+        : const Duration(seconds: 5);
+    _dismissTimer = Timer(visible, () {
       if (mounted) ref.read(operationsProvider.notifier).dismiss(last.id);
     });
   }
@@ -127,9 +133,54 @@ class _ActiveCard extends ConsumerWidget {
         ? context.l10n.operationFilesCount(verb, op.totalFiles)
         : verb;
     final Duration? eta = op.estimatedRemaining;
+    final bool measuring = op.totalBytes == 0 && op.totalFiles == 0;
+    final TextStyle? numeric = context.texts.labelMedium?.copyWith(
+      color: context.colors.onSurfaceVariant,
+      fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+    );
+    final String speedText = paused
+        ? context.l10n.paused
+        : op.bytesPerSecond > 0
+            ? FileSizeFormatter.speed(op.bytesPerSecond) +
+                (eta == null ? '' : '  ·  ${context.l10n.timeLeft(FileSizeFormatter.duration(eta))}')
+            : context.l10n.calculating;
+
+    if (!expanded) {
+      // Collapsed: one slim line that still shows the essentials.
+      return FvCard(
+        elevated: true,
+        onTap: onToggle,
+        padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                value: measuring ? null : op.progress,
+                strokeWidth: 3,
+                backgroundColor: context.tokens.chipFill,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '$title · ${op.percent}%',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.texts.titleSmall,
+              ),
+            ),
+            Text(speedText, style: numeric),
+            FvIconButtonPlain(icon: Icons.expand_less, tooltip: context.l10n.more, onPressed: onToggle),
+          ],
+        ),
+      );
+    }
+
     return FvCard(
       elevated: true,
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,131 +191,125 @@ class _ActiveCard extends ConsumerWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
+                  color: context.tokens.tonal,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(_icon(op.type), size: 20, color: context.colors.primary),
+                child: Icon(_icon(op.type), size: 20, color: context.tokens.onTonal),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  paused ? '${context.l10n.paused} • $title' : title,
-                  style: context.texts.headlineSmall?.copyWith(fontSize: 16),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (op.totalFiles > 0)
-                FvCountBadge(context.l10n.ofFiles(op.processedFiles, op.totalFiles)),
-              FvIconButtonPlain(
-                icon: expanded ? Icons.expand_less : Icons.expand_more,
-                tooltip: expanded ? context.l10n.close : context.l10n.more,
-                onPressed: onToggle,
-              ),
-            ],
-          ),
-          if (expanded) ...<Widget>[
-            const SizedBox(height: 8),
-            Row(
-              children: <Widget>[
-                Icon(Icons.insert_drive_file_outlined, size: 16, color: context.colors.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    op.currentFile ?? (op.sources.isEmpty ? '' : p.basename(op.sources.first)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.texts.bodySmall,
-                  ),
-                ),
-                if (op.destination != null) ...<Widget>[
-                  const SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 14, color: context.colors.outline),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      op.destination!,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      title,
+                      style: context.texts.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      op.currentFile ?? (op.sources.isEmpty ? '' : p.basename(op.sources.first)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
                     ),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                measuring ? '' : '${op.percent}%',
+                style: context.texts.headlineSmall?.copyWith(
+                  fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                ),
+              ),
+              FvIconButtonPlain(icon: Icons.expand_more, tooltip: context.l10n.hide, onPressed: onToggle),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
-                value: op.totalBytes == 0 && op.totalFiles == 0 ? null : op.progress,
-                minHeight: 8,
+                value: measuring ? null : op.progress,
+                minHeight: 6,
+                backgroundColor: context.tokens.chipFill,
               ),
             ),
-            const SizedBox(height: 8),
-            Row(
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
               children: <Widget>[
+                Flexible(
+                  child: Text(
+                    <String>[
+                      if (op.totalBytes > 0)
+                        '${FileSizeFormatter.format(op.processedBytes)} / ${FileSizeFormatter.format(op.totalBytes)}',
+                      if (op.totalFiles > 0) context.l10n.filesProgress(op.processedFiles, op.totalFiles),
+                    ].join('  ·  '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: numeric,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  op.totalBytes > 0
-                      ? '${op.percent}%  •  ${FileSizeFormatter.format(op.processedBytes)} / ${FileSizeFormatter.format(op.totalBytes)}'
-                      : '${op.percent}%',
+                  speedText,
                   style: context.texts.labelMedium?.copyWith(
+                    color: context.colors.primary,
                     fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  paused
-                      ? context.l10n.paused
-                      : op.bytesPerSecond > 0
-                          ? '${FileSizeFormatter.speed(op.bytesPerSecond)}${eta == null ? '' : '  •  ${context.l10n.timeLeft(FileSizeFormatter.duration(eta))}'}'
-                          : context.l10n.calculating,
-                  style: context.texts.labelMedium?.copyWith(color: context.colors.primary),
-                ),
               ],
             ),
-            if (queuedCount > 0) ...<Widget>[
-              const SizedBox(height: 4),
-              Text(
-                '${context.l10n.queued}: $queuedCount',
-                style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
-              ),
-            ],
-            const SizedBox(height: 10),
+          ),
+          if (op.destination != null && op.type != OperationType.compress) ...<Widget>[
+            const SizedBox(height: 4),
             Row(
               children: <Widget>[
+                Icon(Icons.subdirectory_arrow_right, size: 14, color: context.colors.outline),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: FvTonalButton(
-                    label: paused ? context.l10n.resume : context.l10n.pause,
-                    icon: paused ? Icons.play_arrow : Icons.pause,
-                    expand: true,
-                    onPressed: _supportsPause(op.type)
-                        ? () => paused ? controller.resume(op.id) : controller.pause(op.id)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.tonal(
-                    onPressed: () => controller.cancel(op.id),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: context.colors.errorContainer.withValues(alpha: context.isDark ? 0.5 : 1),
-                      foregroundColor: context.isDark ? context.colors.error : context.colors.onErrorContainer,
-                      minimumSize: const Size(64, 44),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        const Icon(Icons.close, size: 18),
-                        const SizedBox(width: 6),
-                        Text(context.l10n.cancel),
-                      ],
-                    ),
+                  child: Text(
+                    op.destination!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
           ],
+          if (queuedCount > 0) ...<Widget>[
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.queuedCount(queuedCount),
+              style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              if (_supportsPause(op.type))
+                TextButton.icon(
+                  onPressed: () => paused ? controller.resume(op.id) : controller.pause(op.id),
+                  icon: Icon(paused ? Icons.play_arrow_rounded : Icons.pause_rounded, size: 18),
+                  label: Text(paused ? context.l10n.resume : context.l10n.pause),
+                ),
+              TextButton.icon(
+                onPressed: () => controller.cancel(op.id),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.isDark ? Colors.white : context.colors.error,
+                ),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: Text(context.l10n.cancel),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -295,23 +340,35 @@ class _FinishedStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bool ok = op.status == OperationStatus.completed;
     final bool cancelled = op.status == OperationStatus.cancelled;
-    final String verb = operationVerb(context.l10n, op.type);
+    final bool canUndo = ok && op.type == OperationType.trash;
     final String text = ok
-        ? '$verb • ${context.l10n.completed}'
+        ? _doneText(context, op)
         : cancelled
-            ? '$verb • ${context.l10n.cancelled}'
+            ? '${operationVerb(context.l10n, op.type)} · ${context.l10n.cancelled}'
             : '${context.l10n.operationFailedTitle}: ${operationErrorText(context.l10n, op.errorMessage)}';
     return FvCard(
       elevated: true,
-      padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+      padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
       child: Row(
         children: <Widget>[
           Icon(
-            ok ? Icons.check_circle : cancelled ? Icons.remove_circle_outline : Icons.error_outline,
+            ok ? Icons.check_circle_rounded : cancelled ? Icons.remove_circle_outline : Icons.error_outline,
             color: ok ? context.tokens.success : cancelled ? context.colors.outline : context.colors.error,
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: context.texts.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis)),
+          Expanded(
+            child: Text(text, style: context.texts.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
+          if (canUndo)
+            TextButton(
+              onPressed: () {
+                // undoTrash reads what it needs synchronously, so dismissing
+                // the strip right after is safe.
+                undoTrash(ref, op);
+                ref.read(operationsProvider.notifier).dismiss(op.id);
+              },
+              child: Text(context.l10n.undo),
+            ),
           FvIconButtonPlain(
             icon: Icons.close,
             tooltip: context.l10n.close,
@@ -320,5 +377,20 @@ class _FinishedStrip extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  static String _doneText(BuildContext context, FileOperation op) {
+    final int n = op.totalFiles > 0 ? op.totalFiles : op.sources.length;
+    return switch (op.type) {
+      OperationType.copy => context.l10n.doneCopied(n),
+      OperationType.move => context.l10n.doneMoved(n),
+      OperationType.trash => context.l10n.movedToTrash(op.sources.length),
+      OperationType.delete => context.l10n.doneDeleted(op.sources.length),
+      OperationType.restore => context.l10n.doneRestored(n),
+      OperationType.encrypt => context.l10n.vaultAdded(n),
+      OperationType.decrypt => context.l10n.vaultExported(n),
+      OperationType.compress => context.l10n.archiveCreated,
+      OperationType.extract => context.l10n.extractionComplete,
+    };
   }
 }

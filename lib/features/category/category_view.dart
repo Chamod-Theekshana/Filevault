@@ -1,6 +1,5 @@
 import 'package:filevault/core/di/providers.dart';
 import 'package:filevault/core/extensions/context_extensions.dart';
-import 'package:filevault/core/router/app_routes.dart';
 import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/widgets/folder_picker_sheet.dart';
 import 'package:filevault/core/widgets/fv_app_bar.dart';
@@ -14,10 +13,10 @@ import 'package:filevault/features/browser/widgets/file_actions_sheet.dart';
 import 'package:filevault/features/home/widgets/home_sections.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
+import 'package:filevault/features/vault/vault_actions.dart';
 import 'package:filevault/features/viewer/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CategoryState {
@@ -95,11 +94,14 @@ class CategoryViewModel extends AutoDisposeFamilyNotifier<CategoryState, FileCat
     final List<FileEntry> files =
         await ref.read(indexRepositoryProvider).filesInCategory(arg, limit: 3000);
     // Drop entries whose file disappeared since the last scan.
-    final List<FileEntry> alive = <FileEntry>[];
-    for (final FileEntry e in files) {
-      if (_disposed) return;
-      if (await ref.read(fileRepositoryProvider).exists(e.path)) alive.add(e);
-    }
+    final Set<String> present = await ref
+        .read(fileRepositoryProvider)
+        .existingPaths(<String>[for (final FileEntry e in files) e.path]);
+    if (_disposed) return;
+    final List<FileEntry> alive = <FileEntry>[
+      for (final FileEntry e in files)
+        if (present.contains(e.path)) e,
+    ];
     _set(state.copyWith(
       entries: state.sort.apply(alive),
       loading: false,
@@ -131,6 +133,13 @@ class CategoryViewModel extends AutoDisposeFamilyNotifier<CategoryState, FileCat
 
   void selectAll() =>
       state = state.copyWith(selected: state.entries.map((FileEntry e) => e.path).toSet());
+
+  void invertSelection() => state = state.copyWith(
+        selected: <String>{
+          for (final FileEntry e in state.entries)
+            if (!state.selected.contains(e.path)) e.path,
+        },
+      );
 
   void clearSelection() => state = state.copyWith(selected: <String>{});
 }
@@ -240,11 +249,17 @@ class CategoryView extends ConsumerWidget {
     CategoryState state,
     CategoryViewModel vm,
   ) async {
-    final String? action = await showSelectionMoreSheet(context, canCompress: false);
+    final String? action = await showSelectionMoreSheet(
+      context,
+      canCompress: false,
+      canPickDestination: false,
+    );
     if (action == null || !context.mounted) return;
     switch (action) {
       case 'selectAll':
         vm.selectAll();
+      case 'invert':
+        vm.invertSelection();
       case 'favorite':
         for (final FileEntry e in state.entries) {
           if (!context.mounted) return;
@@ -256,19 +271,8 @@ class CategoryView extends ConsumerWidget {
         vm.clearSelection();
       case 'vault':
         final List<String> files = state.selected.toList();
-        final bool configured = await ref.read(vaultRepositoryProvider).isConfigured();
-        if (!context.mounted) return;
-        if (!configured) {
-          context.push(AppRoutes.vaultSetup);
-          return;
-        }
-        if (!ref.read(vaultRepositoryProvider).isUnlocked) {
-          context.push(AppRoutes.vault, extra: <String, Object?>{'pendingAdd': files});
-          vm.clearSelection();
-          return;
-        }
-        ref.read(operationsProvider.notifier).enqueueEncrypt(files);
         vm.clearSelection();
+        await moveToSecureFolder(context, ref, files);
       case 'deleteForever':
         final bool ok = await showConfirmDialog(
           context,

@@ -1,7 +1,6 @@
 import 'package:filevault/core/di/providers.dart';
 import 'package:filevault/core/errors/result.dart';
 import 'package:filevault/core/extensions/context_extensions.dart';
-import 'package:filevault/core/router/app_routes.dart';
 import 'package:filevault/core/utils/date_formatter.dart';
 import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/widgets/folder_picker_sheet.dart';
@@ -13,13 +12,16 @@ import 'package:filevault/domain/models/sort_options.dart';
 import 'package:filevault/features/archive/widgets/create_archive_sheet.dart';
 import 'package:filevault/features/browser/widgets/properties_dialog.dart';
 import 'package:filevault/features/browser/widgets/tag_picker_sheet.dart';
+import 'package:filevault/features/operations/file_clipboard.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
+import 'package:filevault/features/operations/undo_trash.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
+import 'package:filevault/features/vault/vault_actions.dart';
 import 'package:filevault/features/viewer/open_file.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Result of the per-file action sheet so the caller can refresh.
@@ -143,7 +145,41 @@ class _FileActionsSheetState extends ConsumerState<_FileActionsSheet> {
       );
       if (!ok || !mounted) return;
     }
-    ref.read(operationsProvider.notifier).enqueueTrash(<String>[entry.path]);
+    final BuildContext host = Navigator.of(context).context;
+    _close(FileActionResult.changed);
+    if (host.mounted) trashWithUndo(host, ref, <String>[entry.path]);
+  }
+
+  void _toClipboard({required bool move}) {
+    final FileClipboard clipboard = ref.read(fileClipboardProvider.notifier);
+    if (move) {
+      clipboard.cut(<String>[entry.path]);
+    } else {
+      clipboard.copy(<String>[entry.path]);
+    }
+    context.showSnack(move ? context.l10n.readyToMove(1) : context.l10n.readyToCopy(1));
+    _close();
+  }
+
+  bool get _hiddenFromGallery =>
+      entry.isDirectory && ref.read(fileRepositoryProvider).isHiddenFromGallery(entry.path);
+
+  Future<void> _toggleGallery() async {
+    final bool hide = !_hiddenFromGallery;
+    final Result<List<String>> r =
+        await ref.read(fileRepositoryProvider).setHiddenFromGallery(entry.path, hidden: hide);
+    final List<String>? files = r.valueOrNull;
+    if (files != null) {
+      await ref.read(platformChannelProvider).syncMedia(added: files, removed: const <String>[]);
+    }
+    if (!mounted) return;
+    context.showSnack(
+      files == null
+          ? context.l10n.somethingWentWrong
+          : hide
+              ? context.l10n.hiddenFromGallery
+              : context.l10n.shownInGallery,
+    );
     _close(FileActionResult.changed);
   }
 
@@ -190,18 +226,10 @@ class _FileActionsSheetState extends ConsumerState<_FileActionsSheet> {
   }
 
   Future<void> _addToVault() async {
-    final bool configured = await ref.read(vaultRepositoryProvider).isConfigured();
-    if (!mounted) return;
+    // Capture what we need before the sheet (and its context) goes away.
+    final BuildContext host = Navigator.of(context, rootNavigator: true).context;
     _close();
-    if (!configured) {
-      context.push(AppRoutes.vaultSetup);
-      return;
-    }
-    if (!ref.read(vaultRepositoryProvider).isUnlocked) {
-      context.push(AppRoutes.vault, extra: <String, Object?>{'pendingAdd': <String>[entry.path]});
-      return;
-    }
-    ref.read(operationsProvider.notifier).enqueueEncrypt(<String>[entry.path]);
+    await moveToSecureFolder(host, ref, <String>[entry.path]);
   }
 
   @override
@@ -272,11 +300,23 @@ class _FileActionsSheetState extends ConsumerState<_FileActionsSheet> {
             FvSheetAction(
               icon: Icons.content_copy_outlined,
               label: context.l10n.copy,
+              trailing: _SheetHint(context.l10n.pasteLater),
+              onTap: () => _toClipboard(move: false),
+            ),
+            FvSheetAction(
+              icon: Icons.content_cut_outlined,
+              label: context.l10n.cut,
+              trailing: _SheetHint(context.l10n.pasteLater),
+              onTap: () => _toClipboard(move: true),
+            ),
+            FvSheetAction(
+              icon: Icons.copy_all_outlined,
+              label: context.l10n.copyTo,
               onTap: () => _copyOrMove(move: false),
             ),
             FvSheetAction(
               icon: Icons.drive_file_move_outlined,
-              label: context.l10n.move,
+              label: context.l10n.moveTo,
               onTap: () => _copyOrMove(move: true),
             ),
             FvSheetAction(
@@ -306,11 +346,16 @@ class _FileActionsSheetState extends ConsumerState<_FileActionsSheet> {
               label: context.l10n.compressToZip,
               onTap: _compress,
             ),
-            if (!entry.isDirectory)
+            FvSheetAction(
+              icon: Icons.lock_outline,
+              label: context.l10n.addToSecureFolder,
+              onTap: _addToVault,
+            ),
+            if (entry.isDirectory)
               FvSheetAction(
-                icon: Icons.lock_outline,
-                label: context.l10n.addToSecureFolder,
-                onTap: _addToVault,
+                icon: _hiddenFromGallery ? Icons.photo_library_outlined : Icons.hide_image_outlined,
+                label: _hiddenFromGallery ? context.l10n.showInGallery : context.l10n.hideFromGallery,
+                onTap: _toggleGallery,
               ),
             Divider(height: 1, color: context.tokens.cardBorder),
             FvSheetAction(
@@ -360,6 +405,20 @@ class _FileActionsSheetState extends ConsumerState<_FileActionsSheet> {
   }
 }
 
+class _SheetHint extends StatelessWidget {
+  const _SheetHint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: context.texts.labelSmall?.copyWith(color: context.colors.onSurfaceVariant),
+    );
+  }
+}
+
 /// Bottom action bar shown while items are selected.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
@@ -381,7 +440,9 @@ class SelectionActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return ReserveBottomSpace(
+      height: 68,
+      child: Material(
       color: context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainerLowest,
       child: Container(
         decoration: BoxDecoration(
@@ -406,6 +467,7 @@ class SelectionActionBar extends StatelessWidget {
             _Action(icon: Icons.more_horiz, label: context.l10n.more, onTap: onMore),
           ],
         ),
+      ),
       ),
     );
   }
@@ -456,13 +518,39 @@ class _Action extends StatelessWidget {
 }
 
 /// "More" sheet for a multi-selection.
-Future<String?> showSelectionMoreSheet(BuildContext context, {required bool canCompress}) {
+Future<String?> showSelectionMoreSheet(
+  BuildContext context, {
+  required bool canCompress,
+  bool canBatchRename = false,
+  bool canPickDestination = true,
+}) {
   return showModalBottomSheet<String>(
     context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (BuildContext context) => SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          if (canPickDestination) ...<Widget>[
+            FvSheetAction(
+              icon: Icons.copy_all_outlined,
+              label: context.l10n.copyTo,
+              onTap: () => Navigator.of(context).pop('copyTo'),
+            ),
+            FvSheetAction(
+              icon: Icons.drive_file_move_outlined,
+              label: context.l10n.moveTo,
+              onTap: () => Navigator.of(context).pop('moveTo'),
+            ),
+          ],
+          if (canBatchRename)
+            FvSheetAction(
+              icon: Icons.drive_file_rename_outline,
+              label: context.l10n.batchRename,
+              onTap: () => Navigator.of(context).pop('batchRename'),
+            ),
           if (canCompress)
             FvSheetAction(
               icon: Icons.folder_zip_outlined,
@@ -497,6 +585,7 @@ Future<String?> showSelectionMoreSheet(BuildContext context, {required bool canC
           ),
           const SizedBox(height: 8),
         ],
+        ),
       ),
     ),
   );
@@ -512,6 +601,8 @@ Future<void> showSortSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (BuildContext context) => _SortSheet(
       sort: sort,
       onChanged: onChanged,
@@ -564,7 +655,8 @@ class _SortSheetState extends State<_SortSheet> {
   Widget build(BuildContext context) {
     final bool? hidden = widget.showHidden;
     return SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Padding(
@@ -617,6 +709,7 @@ class _SortSheetState extends State<_SortSheet> {
             ),
           const SizedBox(height: 8),
         ],
+      ),
       ),
     );
   }

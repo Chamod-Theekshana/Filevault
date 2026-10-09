@@ -69,20 +69,59 @@ class SortSpec {
     return a.extension.compareTo(b.extension);
   }
 
-  /// Natural ordering so "file2" sorts before "file10".
-  static int _compareNames(String a, String b) {
-    final RegExp chunks = RegExp(r'(\d+|\D+)');
-    final List<String> pa =
-        chunks.allMatches(a.toLowerCase()).map((Match m) => m.group(0)!).toList();
-    final List<String> pb =
-        chunks.allMatches(b.toLowerCase()).map((Match m) => m.group(0)!).toList();
-    final int n = pa.length < pb.length ? pa.length : pb.length;
-    for (int i = 0; i < n; i++) {
-      final int? na = int.tryParse(pa[i]);
-      final int? nb = int.tryParse(pb[i]);
-      final int c = (na != null && nb != null) ? na.compareTo(nb) : pa[i].compareTo(pb[i]);
-      if (c != 0) return c;
+  /// Natural ordering so "file2" sorts before "file10". Implemented as a
+  /// single allocation-light scan (no RegExp) because it runs O(n log n)
+  /// times when sorting folders with thousands of entries.
+  static int _compareNames(String a, String b) => naturalCompare(a, b);
+
+  static bool _isDigit(int c) => c >= 48 && c <= 57;
+
+  static int naturalCompare(String a, String b) {
+    final String x = a.toLowerCase();
+    final String y = b.toLowerCase();
+    int i = 0;
+    int j = 0;
+    while (i < x.length && j < y.length) {
+      final int cx = x.codeUnitAt(i);
+      final int cy = y.codeUnitAt(j);
+      if (_isDigit(cx) && _isDigit(cy)) {
+        int si = i;
+        while (si < x.length && x.codeUnitAt(si) == 48) {
+          si++;
+        }
+        int sj = j;
+        while (sj < y.length && y.codeUnitAt(sj) == 48) {
+          sj++;
+        }
+        int ei = si;
+        while (ei < x.length && _isDigit(x.codeUnitAt(ei))) {
+          ei++;
+        }
+        int ej = sj;
+        while (ej < y.length && _isDigit(y.codeUnitAt(ej))) {
+          ej++;
+        }
+        final int lenX = ei - si;
+        final int lenY = ej - sj;
+        if (lenX != lenY) return lenX < lenY ? -1 : 1;
+        for (int k = 0; k < lenX; k++) {
+          final int d = x.codeUnitAt(si + k) - y.codeUnitAt(sj + k);
+          if (d != 0) return d < 0 ? -1 : 1;
+        }
+        final int runX = ei - i;
+        final int runY = ej - j;
+        if (runX != runY) return runX < runY ? -1 : 1;
+        i = ei;
+        j = ej;
+      } else {
+        if (cx != cy) return cx < cy ? -1 : 1;
+        i++;
+        j++;
+      }
     }
-    return pa.length.compareTo(pb.length);
+    final int restX = x.length - i;
+    final int restY = y.length - j;
+    if (restX == restY) return 0;
+    return restX < restY ? -1 : 1;
   }
 }

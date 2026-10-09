@@ -94,7 +94,7 @@ class PermissionPrivacyBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              context.l10n.permissionPrivacy,
+              context.l10n.permissionPrivacyNote,
               style: context.texts.bodySmall,
             ),
           ),
@@ -117,7 +117,7 @@ class OnboardingHeader extends StatelessWidget {
             width: 44,
             height: 44,
             child: IconButton(
-              tooltip: context.l10n.backAction,
+              tooltip: context.l10n.back,
               onPressed: () => Navigator.maybePop(context),
               icon: const Icon(Icons.arrow_back),
             ),

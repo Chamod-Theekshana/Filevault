@@ -67,8 +67,7 @@ class WorkerContext {
   /// Report progress to the caller. Throttled so UI updates stay cheap.
   void report(double fraction, [String? label]) {
     final DateTime now = DateTime.now();
-    final bool bigStep = (fraction - _lastFraction).abs() >= 0.01;
-    if (!bigStep && now.difference(_lastSent).inMilliseconds < 120 && fraction < 1) {
+    if (now.difference(_lastSent).inMilliseconds < 120 && fraction < 1) {
       return;
     }
     _lastFraction = fraction;
@@ -127,7 +126,9 @@ Future<void> _workerEntry(_WorkerInit init) async {
     final Object? result = await init.job(init.args, ctx);
     init.replyTo.send(_DoneMsg(result));
   } catch (error, stack) {
-    final Object payload = error is Failure ? error : error.toString();
+    // Map I/O errors to typed failures inside the worker so "disk full" or
+    // "permission denied" survive the trip back to the UI.
+    final Failure payload = Failure.fromException(error);
     init.replyTo.send(_ErrorMsg(payload, stack.toString()));
   } finally {
     control.close();

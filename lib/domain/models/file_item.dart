@@ -5,7 +5,7 @@ part 'file_item.freezed.dart';
 enum FileItemType { folder, image, video, audio, document, archive, apk, unknown }
 
 @freezed
-class FileItem with _$FileItem {
+abstract class FileItem with _$FileItem {
   const factory FileItem({
     required String path,
     required String name,

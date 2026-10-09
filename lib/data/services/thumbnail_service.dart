@@ -16,7 +16,19 @@ class ThumbnailService {
 
   final PlatformChannelService _platform;
   final Semaphore _slots = Semaphore(3);
+  /// Bounded in-memory cache (insertion-ordered map used as an LRU) so long
+  /// scrolling sessions through big galleries cannot grow memory forever.
   final Map<String, Uint8List?> _memory = <String, Uint8List?>{};
+  static const int _memoryCapacity = 240;
+
+  Uint8List? _remember(String key, Uint8List? bytes) {
+    _memory.remove(key);
+    _memory[key] = bytes;
+    while (_memory.length > _memoryCapacity) {
+      _memory.remove(_memory.keys.first);
+    }
+    return bytes;
+  }
   Directory? _cacheDir;
 
   Future<Directory> _dir() async {
@@ -40,13 +52,12 @@ class ThumbnailService {
     final File cached = File(p.join(dir.path, '$key.jpg'));
     if (await cached.exists()) {
       final Uint8List bytes = await cached.readAsBytes();
-      _memory[key] = bytes;
-      return bytes;
+      return _remember(key, bytes);
     }
     await _slots.acquire();
     try {
       final Uint8List? bytes = await _platform.videoThumbnail(path, width: 320);
-      _memory[key] = bytes;
+      _remember(key, bytes);
       if (bytes != null) {
         try {
           await cached.writeAsBytes(bytes);
@@ -64,11 +75,22 @@ class ThumbnailService {
     await _slots.acquire();
     try {
       final Uint8List? icon = (await _platform.apkInfo(path))?.icon;
-      _memory[key] = icon;
-      return icon;
+      return _remember(key, icon);
     } finally {
       _slots.release();
     }
+  }
+
+  /// Forgets every cached thumbnail of [path] – used when a file is moved
+  /// into the Secure Folder so no preview of it survives anywhere.
+  Future<void> evict(String path, {required int size, required DateTime modified}) async {
+    final String key = _key(path, size, modified);
+    _memory.remove(key);
+    _memory.remove('apk-$key');
+    try {
+      final File cached = File(p.join((await _dir()).path, '$key.jpg'));
+      if (await cached.exists()) await cached.delete();
+    } catch (_) {}
   }
 
   Future<void> clear() async {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:filevault/core/extensions/context_extensions.dart';
+import 'package:filevault/core/theme/app_theme.dart';
 import 'package:filevault/core/widgets/fv_app_bar.dart';
 import 'package:filevault/core/widgets/fv_common.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
     try {
       await video.initialize();
     } catch (_) {
+      await video.dispose();
       if (mounted) setState(() => _failed = true);
       return;
     }
@@ -67,6 +69,16 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    // Video always plays on black, so the chrome uses the dark theme in both
+    // app themes (otherwise the back arrow and title are dark-on-black).
+    final int accent = context.colors.primaryContainer.toARGB32();
+    return Theme(
+      data: AppTheme.dark(accentArgb: accent),
+      child: Builder(builder: _page),
+    );
+  }
+
+  Widget _page(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: FvAppBar(

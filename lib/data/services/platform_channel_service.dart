@@ -68,6 +68,35 @@ class PlatformChannelService {
     }
   }
 
+  /// Keeps MediaStore in sync after file operations: rows of [removed] paths
+  /// (and everything below removed folders) are deleted – only once the
+  /// files are really gone – and [added] paths are scanned. This is what
+  /// keeps files moved into the Secure Folder out of every gallery.
+  Future<void> syncMedia({
+    required List<String> added,
+    required List<String> removed,
+  }) async {
+    if (added.isEmpty && removed.isEmpty) return;
+    try {
+      await _channel.invokeMethod<void>('syncMedia', <String, Object?>{
+        'added': added,
+        'removed': removed,
+      });
+    } on MissingPluginException {
+      // Not on Android.
+    } catch (e) {
+      appLogger.d('syncMedia failed: $e');
+    }
+  }
+
+  /// Blocks screenshots, screen recording and the recent-apps preview while
+  /// sensitive content (Secure Folder, lock screen) is on screen.
+  Future<void> setSecureWindow(bool secure) async {
+    try {
+      await _channel.invokeMethod<void>('setSecureWindow', <String, Object?>{'secure': secure});
+    } catch (_) {}
+  }
+
   Future<void> startOperationNotification({
     required String title,
     required String text,

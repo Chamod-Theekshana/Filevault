@@ -123,7 +123,9 @@ class BrowserViewModel extends AutoDisposeFamilyNotifier<BrowserState, String> {
 
   @override
   BrowserState build(String arg) {
-    final AppSettings settings = ref.watch(settingsProvider);
+    // read, not watch: changing an unrelated setting (theme, accent) must not
+    // rebuild open folders and drop the user's selection or filter.
+    final AppSettings settings = ref.read(settingsProvider);
     ref.listen(operationFinishedProvider, (_, _) => refresh());
     ref.onDispose(() {
       _disposed = true;
@@ -145,20 +147,24 @@ class BrowserViewModel extends AutoDisposeFamilyNotifier<BrowserState, String> {
     final int generation = ++_generation;
     await _sub?.cancel();
     if (_stale(generation)) return;
-    state = state.copyWith(loading: true, clearFailure: true, entries: <FileEntry>[]);
 
     if (ref.read(fileRepositoryProvider).isRestricted(state.path)) {
-      state = state.copyWith(loading: false, restricted: true);
+      state = state.copyWith(loading: false, restricted: true, entries: <FileEntry>[]);
       return;
     }
 
-    final List<StorageVolume> volumes = await ref.read(storageRepositoryProvider).volumes();
-    StorageVolume? volume;
-    for (final StorageVolume v in volumes) {
-      if (FileUtils.isWithin(v.path, state.path)) volume = v;
-    }
-    if (_stale(generation)) return;
-    state = state.copyWith(volume: volume, freeBytes: volume?.freeBytes ?? 0);
+    // Paint the last known listing immediately, then revalidate.
+    final List<FileEntry>? cached = ref
+        .read(directoryCacheProvider)
+        .get(state.path, showHidden: state.showHidden);
+    state = state.copyWith(
+      loading: true,
+      clearFailure: true,
+      entries: cached == null ? <FileEntry>[] : state.sort.apply(cached),
+    );
+
+    // Volume info is only needed for the header; never block the listing on it.
+    unawaited(_resolveVolume(generation));
 
     final List<FileEntry> collected = <FileEntry>[];
     _sub = ref
@@ -168,7 +174,11 @@ class BrowserViewModel extends AutoDisposeFamilyNotifier<BrowserState, String> {
       (List<FileEntry> batch) {
         if (_stale(generation)) return;
         collected.addAll(batch);
-        state = state.copyWith(entries: state.sort.apply(collected), loading: true);
+        // Keep showing the cached listing until the fresh one is complete,
+        // unless there was nothing cached to show.
+        if (cached == null) {
+          state = state.copyWith(entries: state.sort.apply(collected), loading: true);
+        }
       },
       onError: (Object error) {
         if (_stale(generation)) return;
@@ -176,33 +186,51 @@ class BrowserViewModel extends AutoDisposeFamilyNotifier<BrowserState, String> {
       },
       onDone: () async {
         if (_stale(generation)) return;
-        state = state.copyWith(entries: state.sort.apply(collected), loading: false);
-        await _countFolderChildren(generation, collected);
+        // Carry over child counts we already know so rows do not flicker.
+        final Map<String, int> known = <String, int>{
+          for (final FileEntry e in state.entries)
+            if (e.isDirectory && e.childCount != null) e.path: e.childCount!,
+        };
+        final List<FileEntry> merged = <FileEntry>[
+          for (final FileEntry e in collected)
+            known.containsKey(e.path) ? e.copyWith(childCount: known[e.path]) : e,
+        ];
+        state = state.copyWith(entries: state.sort.apply(merged), loading: false);
+        ref.read(directoryCacheProvider).put(state.path, merged, showHidden: state.showHidden);
+        await _countFolderChildren(generation, merged);
       },
       cancelOnError: true,
     );
   }
 
-  /// Fills in "24 items" for folders, a few at a time so the list stays smooth.
-  Future<void> _countFolderChildren(int generation, List<FileEntry> entries) async {
-    final List<FileEntry> folders =
-        entries.where((FileEntry e) => e.isDirectory && e.childCount == null).toList();
-    if (folders.isEmpty) return;
-    final Map<String, int> counts = <String, int>{};
-    for (int i = 0; i < folders.length; i++) {
-      if (_stale(generation)) return;
-      final Result<int> r = await ref.read(fileRepositoryProvider).countChildren(folders[i].path);
-      counts[folders[i].path] = r.valueOrNull ?? 0;
-      final bool lastOfBatch = (i + 1) % 12 == 0 || i == folders.length - 1;
-      if (!lastOfBatch) continue;
-      if (_stale(generation)) return;
-      state = state.copyWith(
-        entries: <FileEntry>[
-          for (final FileEntry e in state.entries)
-            counts.containsKey(e.path) ? e.copyWith(childCount: counts[e.path]) : e,
-        ],
-      );
+  Future<void> _resolveVolume(int generation) async {
+    final List<StorageVolume> volumes = await ref.read(storageRepositoryProvider).volumes();
+    if (_stale(generation)) return;
+    StorageVolume? volume;
+    for (final StorageVolume v in volumes) {
+      if (FileUtils.isWithin(v.path, state.path)) volume = v;
     }
+    state = state.copyWith(volume: volume, freeBytes: volume?.freeBytes ?? 0);
+  }
+
+  /// Fills in "24 items" for every folder in a single background pass and a
+  /// single state update.
+  Future<void> _countFolderChildren(int generation, List<FileEntry> entries) async {
+    final List<String> folders = <String>[
+      for (final FileEntry e in entries)
+        if (e.isDirectory) e.path,
+    ];
+    if (folders.isEmpty) return;
+    final Map<String, int> counts = await ref
+        .read(fileRepositoryProvider)
+        .childCounts(folders, showHidden: state.showHidden);
+    if (_stale(generation) || counts.isEmpty) return;
+    final List<FileEntry> updated = <FileEntry>[
+      for (final FileEntry e in state.entries)
+        counts.containsKey(e.path) ? e.copyWith(childCount: counts[e.path]) : e,
+    ];
+    state = state.copyWith(entries: updated);
+    ref.read(directoryCacheProvider).put(state.path, updated, showHidden: state.showHidden);
   }
 
   Future<void> refresh() => load();
@@ -300,6 +328,55 @@ class BrowserViewModel extends AutoDisposeFamilyNotifier<BrowserState, String> {
     final Result<FileEntry> r = await ref.read(fileRepositoryProvider).duplicate(entry.path);
     if (r.isSuccess) await refresh();
     return r;
+  }
+
+  /// Renames [targets] to "<base> 1.ext", "<base> 2.ext"… in the given order.
+  /// Extensions are kept, collisions get a "(n)" suffix. Returns how many
+  /// entries were renamed.
+  Future<int> batchRename(List<FileEntry> targets, String base) async {
+    final Set<String> taken = <String>{
+      for (final FileEntry e in state.entries)
+        if (!targets.any((FileEntry t) => t.path == e.path)) e.name,
+    };
+    // Work out every final name first.
+    final int width = targets.length.toString().length;
+    final List<String> finalNames = <String>[];
+    for (int i = 0; i < targets.length; i++) {
+      final FileEntry entry = targets[i];
+      final String number = (i + 1).toString().padLeft(width, '0');
+      final String ext = entry.isDirectory || entry.extension.isEmpty ? '' : '.${entry.extension}';
+      final String wanted = FileUtils.uniqueName('$base $number$ext', taken.contains);
+      taken.add(wanted);
+      finalNames.add(wanted);
+    }
+    // Pass 1: move everything that changes to a unique temporary name, so a
+    // new name can never collide with another selected file's current name.
+    final String stamp = DateTime.now().microsecondsSinceEpoch.toString();
+    final List<(FileEntry, String, String)> staged = <(FileEntry, String, String)>[];
+    for (int i = 0; i < targets.length; i++) {
+      final FileEntry entry = targets[i];
+      if (finalNames[i] == entry.name) continue;
+      final Result<FileEntry> r =
+          await ref.read(fileRepositoryProvider).rename(entry.path, '.fvren-$stamp-$i');
+      final FileEntry? tmp = r.valueOrNull;
+      if (tmp != null) staged.add((entry, tmp.path, finalNames[i]));
+    }
+    // Pass 2: give each its final name and update favourites/tags/index.
+    int renamed = 0;
+    for (final (FileEntry original, String tmpPath, String name) in staged) {
+      final Result<FileEntry> r = await ref.read(fileRepositoryProvider).rename(tmpPath, name);
+      if (r.isFailure) {
+        // Put it back rather than leave a temporary name behind.
+        await ref.read(fileRepositoryProvider).rename(tmpPath, original.name);
+        continue;
+      }
+      final FileEntry done = r.valueOrNull!;
+      renamed++;
+      await ref.read(collectionsRepositoryProvider).pathMoved(original.path, done.path);
+      await ref.read(indexRepositoryProvider).movePath(original.path, done.path);
+    }
+    if (!_disposed) await refresh();
+    return renamed;
   }
 
   bool nameExists(String name) => state.entries.any((FileEntry e) => e.name == name);

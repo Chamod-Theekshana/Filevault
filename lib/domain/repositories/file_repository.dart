@@ -33,6 +33,9 @@ abstract class FileRepository {
 
   Future<bool> exists(String path);
 
+  /// The subset of [paths] that still exists (one background pass).
+  Future<Set<String>> existingPaths(List<String> paths);
+
   bool isRestricted(String path);
 
   Future<Result<FileEntry>> createFolder(String parentPath, String name);
@@ -44,6 +47,16 @@ abstract class FileRepository {
   Future<Result<FileEntry>> duplicate(String path);
 
   Future<Result<int>> countChildren(String path);
+
+  /// Hides [folder] from galleries with a `.nomedia` marker (or shows it
+  /// again). Returns the files whose media-index entries should be refreshed.
+  Future<Result<List<String>>> setHiddenFromGallery(String folder, {required bool hidden});
+
+  /// True when [folder] carries a `.nomedia` marker.
+  bool isHiddenFromGallery(String folder);
+
+  /// Direct-child counts for many folders in one pass (off the UI isolate).
+  Future<Map<String, int>> childCounts(List<String> folders, {required bool showHidden});
 
   Future<Result<DirectoryStats>> directoryStats(String path, {CancelToken? cancelToken});
 

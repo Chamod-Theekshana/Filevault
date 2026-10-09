@@ -86,6 +86,13 @@ class _VaultFilePickerState extends ConsumerState<_VaultFilePicker> {
           subtitle: path,
           onClose: () => Navigator.of(context).pop(),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            context.l10n.vaultPickHint,
+            style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
+          ),
+        ),
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
@@ -100,12 +107,13 @@ class _VaultFilePickerState extends ConsumerState<_VaultFilePicker> {
                       );
                     }
                     final FileEntry e = _entries[index - (atRoot ? 0 : 1)];
+                    // Tap opens a folder; long-press selects the whole folder.
                     return FvFileListTile(
                       entry: e,
-                      selecting: !e.isDirectory,
+                      selecting: true,
                       selected: _selected.containsKey(e.path),
                       onTap: () => e.isDirectory ? _open(e.path) : _toggle(e),
-                      onLongPress: e.isDirectory ? null : () => _toggle(e),
+                      onLongPress: () => _toggle(e),
                     );
                   },
                 ),
@@ -139,6 +147,7 @@ class _VaultFilePickerState extends ConsumerState<_VaultFilePicker> {
   }
 }
 
-/// Convenience used by tests: filters out entries that cannot be encrypted.
+/// Convenience used by tests: filters out entries that cannot be secured.
+/// Files and folders are both accepted (folders are secured file by file).
 List<FileEntry> encryptableOnly(List<FileEntry> entries) =>
-    entries.where((FileEntry e) => !e.isDirectory && FileUtils.isValidName(e.name)).toList();
+    entries.where((FileEntry e) => FileUtils.isValidName(e.name)).toList();

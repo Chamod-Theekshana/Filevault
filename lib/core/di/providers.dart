@@ -8,7 +8,9 @@ import 'package:filevault/data/repositories/settings_repository_impl.dart';
 import 'package:filevault/data/repositories/storage_repository_impl.dart';
 import 'package:filevault/data/repositories/trash_repository_impl.dart';
 import 'package:filevault/data/repositories/vault_repository_impl.dart';
+import 'package:filevault/data/services/app_lock_service.dart';
 import 'package:filevault/data/services/archive_service.dart';
+import 'package:filevault/data/services/directory_cache.dart';
 import 'package:filevault/data/services/file_system_service.dart';
 import 'package:filevault/data/services/permission_data_source.dart';
 import 'package:filevault/data/services/platform_channel_service.dart';
@@ -36,6 +38,10 @@ final Provider<AppDatabase> appDatabaseProvider = Provider<AppDatabase>(
 final Provider<PlatformChannelService> platformChannelProvider =
     Provider<PlatformChannelService>((Ref ref) => PlatformChannelService());
 
+/// Recent folder listings, shared by every browser screen.
+final Provider<DirectoryCache> directoryCacheProvider =
+    Provider<DirectoryCache>((Ref ref) => DirectoryCache());
+
 final Provider<FileSystemService> fileSystemServiceProvider =
     Provider<FileSystemService>((Ref ref) => const FileSystemService());
 
@@ -47,6 +53,9 @@ final Provider<VaultCryptoService> vaultCryptoProvider =
 
 final Provider<ThumbnailService> thumbnailServiceProvider =
     Provider<ThumbnailService>((Ref ref) => ThumbnailService(ref.watch(platformChannelProvider)));
+
+final Provider<AppLockService> appLockServiceProvider =
+    Provider<AppLockService>((Ref ref) => AppLockService());
 
 final Provider<PermissionDataSource> permissionDataSourceProvider =
     Provider<PermissionDataSource>((Ref ref) => PermissionDataSource());

@@ -151,7 +151,7 @@ class FolderStatsBar extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
+                    color: context.tokens.tonal,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.donut_small_outlined, size: 18, color: context.colors.primary),

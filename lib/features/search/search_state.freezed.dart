@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'search_state.dart';
@@ -9,6 +9,7 @@ part of 'search_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $SearchStateCopyWith<SearchState> get copyWith => _$SearchStateCopyWithImpl<Sear
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.query, query) || other.query == query)&&(identical(other.isIndexing, isIndexing) || other.isIndexing == isIndexing));
+  final _this = this as SearchState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.isIndexing, _this.isIndexing) || other.isIndexing == _this.isIndexing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,isIndexing);
+int get hashCode {
+  final _this = this as SearchState;
+  return Object.hash(runtimeType,_this.query,_this.isIndexing);
+}
 
 @override
 String toString() {
-  return 'SearchState(query: $query, isIndexing: $isIndexing)';
+  final _this = this as SearchState;
+  return 'SearchState(query: ${_this.query}, isIndexing: ${_this.isIndexing})';
 }
 
 
@@ -63,7 +69,7 @@ class _$SearchStateCopyWithImpl<$Res>
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? isIndexing = null,}) {
-  return _then(_self.copyWith(
+  return _then(SearchState(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,isIndexing: null == isIndexing ? _self.isIndexing : isIndexing // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -223,16 +229,18 @@ _$SearchStateCopyWith<_SearchState> get copyWith => __$SearchStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.query, query) || other.query == query)&&(identical(other.isIndexing, isIndexing) || other.isIndexing == isIndexing));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.query, query) || other.query == query)&&(identical(other.isIndexing, isIndexing) || other.isIndexing == isIndexing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,isIndexing);
+int get hashCode {
+    return Object.hash(runtimeType,query,isIndexing);
+}
 
 @override
 String toString() {
-  return 'SearchState(query: $query, isIndexing: $isIndexing)';
+    return 'SearchState(query: $query, isIndexing: $isIndexing)';
 }
 
 

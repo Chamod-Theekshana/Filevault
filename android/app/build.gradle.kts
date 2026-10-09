@@ -2,6 +2,9 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    // Required for the Kotlin sources (platform channels, native vault
+    // crypto) and for the `kotlin { }` block below.
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -93,4 +96,7 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.core:core-ktx:1.13.1")
+    // local_auth's biometric prompt needs an AppCompat theme on the
+    // FlutterFragmentActivity (crashes on Android 8 otherwise).
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }

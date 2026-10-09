@@ -9,7 +9,7 @@ enum FileSortField { name, size, date, type }
 enum SortDirection { asc, desc }
 
 @freezed
-class BrowserState with _$BrowserState {
+abstract class BrowserState with _$BrowserState {
   const factory BrowserState({
     @Default(<String>['Internal storage']) List<String> breadcrumbs,
     @Default(FileViewMode.list) FileViewMode viewMode,

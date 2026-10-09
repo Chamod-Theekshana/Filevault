@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:filevault/core/errors/result.dart';
 import 'package:filevault/core/utils/isolate_worker.dart';
 import 'package:filevault/domain/models/vault_item.dart';
@@ -26,6 +28,13 @@ abstract class VaultRepository {
 
   void lock();
 
+  /// A private copy of the master key for a long-running operation, or null
+  /// while the vault is locked. Operations take a copy when they start so
+  /// that locking the Secure Folder UI (which wipes the in-memory key) never
+  /// corrupts a transfer that is already running. Callers must zero the copy
+  /// when they are done.
+  Uint8List? sessionKey();
+
   /// Permanently destroys the vault and every file in it.
   Future<Result<void>> reset();
 
@@ -33,20 +42,27 @@ abstract class VaultRepository {
 
   Future<int> totalBytes();
 
+  /// Number of stored items (cheap – no file-system pruning).
+  Future<int> itemCount();
+
   /// Encrypts [sourcePath] into the vault and deletes the original.
+  /// [key] is the operation's [sessionKey]; when omitted the live key is used.
   Future<Result<VaultItem>> addFile(
     String sourcePath, {
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
+    Uint8List? key,
   });
 
-  /// Decrypts [item] to [destinationDir] (default: original folder) and
-  /// removes it from the vault. Returns the restored path.
+  /// Decrypts [item] to [destinationDir] (default: its original folder, which
+  /// is recreated when it no longer exists) and removes it from the vault.
+  /// Returns the restored path.
   Future<Result<String>> exportItem(
     VaultItem item, {
     String? destinationDir,
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
+    Uint8List? key,
   });
 
   /// Decrypts [item] into a temporary cache file for viewing. The caller

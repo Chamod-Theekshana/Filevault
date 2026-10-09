@@ -11,12 +11,19 @@ Inter body text, semantic category colours) in both light and dark themes.
 
 ```bash
 flutter pub get
+flutter analyze        # should report no errors
+flutter test
 flutter run            # debug build on a connected device
 flutter build apk --release
 ```
 
-Requirements: Flutter 3.27 or newer (Dart 3.8+), Android SDK 26+ (Android 8.0),
-JDK 17.
+Requirements: Flutter 3.44 or newer (Dart 3.12+, matching `pubspec.lock`),
+Android SDK 26+ (Android 8.0), JDK 17.
+
+There is **no code-generation step**: the project uses no `build_runner`,
+`freezed` or `drift`. All models are plain Dart classes, the database is
+`sqflite`, and strings live in the hand-written `lib/l10n/app_localizations.dart`.
+The full developer and user guide is in `docs/FileVault-Guide.pdf`.
 
 On Android 11+ the app asks for **All files access**
 (`MANAGE_EXTERNAL_STORAGE`) during onboarding; on Android 10 and below it uses
@@ -34,7 +41,9 @@ its own folders.
 | Archives | create and browse ZIP / TAR / TAR.GZ / BZ2 / XZ, extract selected entries, password-protected ZIP |
 | Search | indexed global search with type, size and date filters, recent searches |
 | Analyzer | storage breakdown, largest folders and files, duplicate finder (SHA-256), junk and empty-folder cleaner |
-| Secure Folder | PIN + optional biometric unlock, AES-256-GCM chunked encryption, auto-lock, move in/out |
+| Secure Folder | PIN + optional fingerprint, asks again every time it is opened, native AES-256-GCM (fast enough for large videos), files *and folders*, removed from MediaStore and thumbnail caches, screenshots blocked, restore to original folder |
+| App Lock | separate app PIN + fingerprint, lock immediately or after 30 s / 1 min / 5 min in the background, cooldown after wrong attempts, recent-apps preview hidden |
+| Clipboard | copy / cut, walk to any folder, paste – plus "Copy to… / Move to…" pickers, batch rename, undo for trash |
 | Viewers | images, video, audio with queue, text/code editor, PDF, APK info |
 | Organisation | favorites, recent files, coloured tags, operation history |
 | Settings | theme, accent colour, default layout and sort, hidden files, trash retention, security, about |

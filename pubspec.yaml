@@ -7,6 +7,8 @@ environment:
   sdk: ^3.8.0
 
 dependencies:
+  flutter:
+    sdk: flutter
   flutter_localizations:
     sdk: flutter
 
@@ -47,16 +49,24 @@ dependencies:
   collection: ^1.19.1
   logger: ^2.6.1
   uuid: ^4.5.1
+  equatable: ^3.0.0
+  freezed_annotation: ^3.1.0
+  flutter_local_notifications: ^22.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   mocktail: ^1.0.4
+  freezed: ^4.0.2
+  build_runner: ^2.16.2
 
 flutter:
   generate: true
   uses-material-design: true
+
+  assets:
+    - assets/images/app_icon.png
 
   fonts:
     - family: Inter

@@ -15,6 +15,10 @@ class AppSettings {
     this.defaultSort = const SortSpec(),
     this.vaultBiometric = false,
     this.vaultAutoLockMinutes = 0,
+    this.appLockEnabled = false,
+    this.appLockBiometric = false,
+    this.appLockTimeoutSeconds = 0,
+    this.secureScreens = false,
   });
 
   final AppThemeMode themeMode;
@@ -31,6 +35,21 @@ class AppSettings {
   /// 0 = lock as soon as the app goes to the background.
   final int vaultAutoLockMinutes;
 
+  /// App Lock: ask for the app PIN / fingerprint when FileVault is opened.
+  final bool appLockEnabled;
+  final bool appLockBiometric;
+
+  /// How long FileVault may stay in the background before App Lock asks
+  /// again. 0 = immediately.
+  final int appLockTimeoutSeconds;
+
+  /// Block screenshots and hide app content in the recent-apps screen.
+  final bool secureScreens;
+
+  /// FLAG_SECURE should be on for the whole app (the Secure Folder always
+  /// turns it on for itself).
+  bool get secureWindow => secureScreens || appLockEnabled;
+
   AppSettings copyWith({
     AppThemeMode? themeMode,
     int? accentArgb,
@@ -41,6 +60,10 @@ class AppSettings {
     SortSpec? defaultSort,
     bool? vaultBiometric,
     int? vaultAutoLockMinutes,
+    bool? appLockEnabled,
+    bool? appLockBiometric,
+    int? appLockTimeoutSeconds,
+    bool? secureScreens,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -52,6 +75,10 @@ class AppSettings {
       defaultSort: defaultSort ?? this.defaultSort,
       vaultBiometric: vaultBiometric ?? this.vaultBiometric,
       vaultAutoLockMinutes: vaultAutoLockMinutes ?? this.vaultAutoLockMinutes,
+      appLockEnabled: appLockEnabled ?? this.appLockEnabled,
+      appLockBiometric: appLockBiometric ?? this.appLockBiometric,
+      appLockTimeoutSeconds: appLockTimeoutSeconds ?? this.appLockTimeoutSeconds,
+      secureScreens: secureScreens ?? this.secureScreens,
     );
   }
 }

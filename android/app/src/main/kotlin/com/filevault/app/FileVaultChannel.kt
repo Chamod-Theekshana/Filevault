@@ -1,6 +1,7 @@
 package com.filevault.app
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -18,7 +19,9 @@ import android.os.Environment
 import android.os.StatFs
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
+import android.provider.MediaStore
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -41,6 +44,9 @@ class FileVaultChannel(private val context: Context) : MethodChannel.MethodCallH
     private var channel: MethodChannel? = null
     private val executor = Executors.newFixedThreadPool(2)
 
+    /** Media-index work gets its own thread so it never delays thumbnails. */
+    private val mediaExecutor = Executors.newSingleThreadExecutor()
+
     fun attach(messenger: BinaryMessenger) {
         channel = MethodChannel(messenger, CHANNEL).apply { setMethodCallHandler(this@FileVaultChannel) }
     }
@@ -49,6 +55,7 @@ class FileVaultChannel(private val context: Context) : MethodChannel.MethodCallH
         channel?.setMethodCallHandler(null)
         channel = null
         executor.shutdownNow()
+        mediaExecutor.shutdown()
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -74,6 +81,32 @@ class FileVaultChannel(private val context: Context) : MethodChannel.MethodCallH
             "scanMedia" -> {
                 val paths = call.argument<List<String>>("paths").orEmpty()
                 MediaScannerConnection.scanFile(context, paths.toTypedArray(), null, null)
+                result.success(null)
+            }
+            "syncMedia" -> {
+                val added = call.argument<List<String>>("added").orEmpty()
+                val removed = call.argument<List<String>>("removed").orEmpty()
+                mediaExecutor.execute {
+                    try {
+                        syncMedia(added, removed)
+                    } catch (ignored: Throwable) {
+                    }
+                }
+                result.success(null)
+            }
+            "setSecureWindow" -> {
+                val secure = call.argument<Boolean>("secure") ?: false
+                val window = (context as? Activity)?.window
+                if (window != null) {
+                    if (secure) {
+                        window.setFlags(
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                        )
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }
                 result.success(null)
             }
             "startOperationService" -> {
@@ -122,6 +155,44 @@ class FileVaultChannel(private val context: Context) : MethodChannel.MethodCallH
                 null
             }
             android.os.Handler(context.mainLooper).post { result.success(value) }
+        }
+    }
+
+    // --------------------------------------------------------------- media
+
+    /**
+     * Keeps MediaStore consistent after file operations.
+     *
+     * Rows are only deleted for paths that no longer exist: on Android 11+
+     * deleting a MediaStore row also deletes its file, so this check is what
+     * makes the call safe. Rows below a removed folder are dropped too. New
+     * paths are handed to the media scanner so galleries pick them up.
+     */
+    private fun syncMedia(added: List<String>, removed: List<String>) {
+        val resolver = context.contentResolver
+        val filesUri = MediaStore.Files.getContentUri("external")
+        val rescan = mutableListOf<String>()
+        for (path in removed) {
+            if (File(path).exists()) continue
+            val escaped = path.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            try {
+                @Suppress("DEPRECATION")
+                resolver.delete(
+                    filesUri,
+                    "${MediaStore.MediaColumns.DATA} = ? OR ${MediaStore.MediaColumns.DATA} LIKE ? ESCAPE '\\'",
+                    arrayOf(path, "$escaped/%"),
+                )
+            } catch (error: Throwable) {
+                // Not allowed without all-files access – fall back to a scan,
+                // which drops rows of missing files on most Android versions.
+            }
+            rescan.add(path)
+        }
+        rescan.addAll(added)
+        if (rescan.isNotEmpty()) {
+            rescan.chunked(500).forEach { batch ->
+                MediaScannerConnection.scanFile(context, batch.toTypedArray(), null, null)
+            }
         }
     }
 

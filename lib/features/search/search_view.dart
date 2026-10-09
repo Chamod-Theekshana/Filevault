@@ -1,5 +1,4 @@
 import 'package:filevault/core/extensions/context_extensions.dart';
-import 'package:filevault/core/router/app_routes.dart';
 import 'package:filevault/core/utils/date_formatter.dart';
 import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/widgets/fv_app_bar.dart';
@@ -13,7 +12,6 @@ import 'package:filevault/features/search/search_viewmodel.dart';
 import 'package:filevault/features/viewer/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 /// Global search across the index with type, size and date filters.
 class SearchView extends ConsumerStatefulWidget {
@@ -39,12 +37,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
     final SearchState state = ref.watch(searchProvider);
     final SearchViewModel vm = ref.read(searchProvider.notifier);
     return Scaffold(
-      appBar: FvAppBar(
-        showBrand: true,
-        actions: <Widget>[
-          FvAvatarButton(onPressed: () => context.go(AppRoutes.settings)),
-        ],
-      ),
+      appBar: FvAppBar(title: context.l10n.navSearch),
       body: Column(
         children: <Widget>[
           Padding(
@@ -324,7 +317,11 @@ class _ResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String name = hit.entry.name;
-    final bool hasMatch = hit.matchEnd > hit.matchStart;
+    // Match offsets come from the lower-cased name, whose length can differ
+    // for a few characters (e.g. "İ"); clamp so substring never throws.
+    final int start = hit.matchStart.clamp(0, name.length);
+    final int end = hit.matchEnd.clamp(start, name.length);
+    final bool hasMatch = end > start;
     return Container(
       decoration: last
           ? null
@@ -346,17 +343,15 @@ class _ResultRow extends StatelessWidget {
                         style: context.texts.titleSmall,
                         children: hasMatch
                             ? <InlineSpan>[
-                                TextSpan(text: name.substring(0, hit.matchStart)),
+                                TextSpan(text: name.substring(0, start)),
                                 TextSpan(
-                                  text: name.substring(hit.matchStart, hit.matchEnd),
+                                  text: name.substring(start, end),
                                   style: TextStyle(
-                                    backgroundColor: context.isDark
-                                        ? context.colors.primaryContainer
-                                        : context.colors.primaryFixed,
-                                    color: context.isDark ? context.colors.onPrimaryContainer : context.colors.primary,
+                                    backgroundColor: context.tokens.tonal,
+                                    color: context.tokens.onTonal,
                                   ),
                                 ),
-                                TextSpan(text: name.substring(hit.matchEnd)),
+                                TextSpan(text: name.substring(end)),
                               ]
                             : <InlineSpan>[TextSpan(text: name)],
                       ),

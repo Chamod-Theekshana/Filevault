@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'operation_queue_state.dart';
@@ -9,6 +9,7 @@ part of 'operation_queue_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $OperationQueueStateCopyWith<OperationQueueState> get copyWith => _$OperationQue
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OperationQueueState&&const DeepCollectionEquality().equals(other.tasks, tasks)&&(identical(other.isMinimized, isMinimized) || other.isMinimized == isMinimized));
+  final _this = this as OperationQueueState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OperationQueueState&&const DeepCollectionEquality().equals(other.tasks, _this.tasks)&&(identical(other.isMinimized, _this.isMinimized) || other.isMinimized == _this.isMinimized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(tasks),isMinimized);
+int get hashCode {
+  final _this = this as OperationQueueState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.tasks),_this.isMinimized);
+}
 
 @override
 String toString() {
-  return 'OperationQueueState(tasks: $tasks, isMinimized: $isMinimized)';
+  final _this = this as OperationQueueState;
+  return 'OperationQueueState(tasks: ${_this.tasks}, isMinimized: ${_this.isMinimized})';
 }
 
 
@@ -63,7 +69,7 @@ class _$OperationQueueStateCopyWithImpl<$Res>
 /// Create a copy of OperationQueueState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? tasks = null,Object? isMinimized = null,}) {
-  return _then(_self.copyWith(
+  return _then(OperationQueueState(
 tasks: null == tasks ? _self.tasks : tasks // ignore: cast_nullable_to_non_nullable
 as List<OperationTask>,isMinimized: null == isMinimized ? _self.isMinimized : isMinimized // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -207,7 +213,7 @@ return $default(_that.tasks,_that.isMinimized);case _:
 
 
 class _OperationQueueState extends OperationQueueState {
-  const _OperationQueueState({final  List<OperationTask> tasks = const [], this.isMinimized = false}): _tasks = tasks,super._();
+  const _OperationQueueState({ List<OperationTask> tasks = const [], this.isMinimized = false}): _tasks = tasks,super._();
   
 
  final  List<OperationTask> _tasks;
@@ -229,16 +235,18 @@ _$OperationQueueStateCopyWith<_OperationQueueState> get copyWith => __$Operation
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OperationQueueState&&const DeepCollectionEquality().equals(other._tasks, _tasks)&&(identical(other.isMinimized, isMinimized) || other.isMinimized == isMinimized));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OperationQueueState&&const DeepCollectionEquality().equals(other.tasks, _tasks)&&(identical(other.isMinimized, isMinimized) || other.isMinimized == isMinimized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_tasks),isMinimized);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_tasks),isMinimized);
+}
 
 @override
 String toString() {
-  return 'OperationQueueState(tasks: $tasks, isMinimized: $isMinimized)';
+    return 'OperationQueueState(tasks: $tasks, isMinimized: $isMinimized)';
 }
 
 

@@ -10,6 +10,7 @@ import 'package:filevault/domain/models/storage_volume.dart';
 import 'package:filevault/domain/models/trash_item.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -127,12 +128,15 @@ class TrashView extends ConsumerWidget {
         subtitle: context.l10n.itemCount(state.items.length),
         actions: <Widget>[
           if (state.items.isNotEmpty) ...<Widget>[
-            TextButton.icon(
+            FvIconButton(
+              icon: state.selecting ? Icons.deselect : Icons.select_all,
+              tooltip: state.selecting ? context.l10n.clearSelection : context.l10n.selectAll,
               onPressed: state.selecting ? vm.clearSelection : vm.selectAll,
-              icon: Icon(state.selecting ? Icons.deselect : Icons.select_all, size: 20),
-              label: Text(state.selecting ? context.l10n.clearSelection : context.l10n.selectAll),
             ),
-            TextButton.icon(
+            FvIconButton(
+              icon: Icons.delete_sweep_outlined,
+              tooltip: context.l10n.emptyTrash,
+              color: context.colors.error,
               onPressed: () async {
                 final bool ok = await showConfirmDialog(
                   context,
@@ -144,9 +148,6 @@ class TrashView extends ConsumerWidget {
                 );
                 if (ok) await vm.emptyTrash();
               },
-              style: TextButton.styleFrom(foregroundColor: context.colors.error),
-              icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-              label: Text(context.l10n.emptyTrash),
             ),
           ],
           const SizedBox(width: 4),
@@ -169,7 +170,7 @@ class TrashView extends ConsumerWidget {
                         trailing: IconButton(
                           icon: const Icon(Icons.settings_outlined),
                           tooltip: context.l10n.settings,
-                          onPressed: () => context.push(AppRoutes.settings),
+                          onPressed: () => context.go(AppRoutes.settings),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -205,7 +206,9 @@ class TrashView extends ConsumerWidget {
                 ),
       bottomNavigationBar: !state.selecting
           ? null
-          : Material(
+          : ReserveBottomSpace(
+              height: 76,
+              child: Material(
               color: context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainerLowest,
               child: Container(
                 decoration: BoxDecoration(
@@ -229,8 +232,8 @@ class TrashView extends ConsumerWidget {
                           await vm.deleteSelected();
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: context.colors.errorContainer.withValues(alpha: context.isDark ? 0.5 : 1),
-                          foregroundColor: context.isDark ? context.colors.error : context.colors.onErrorContainer,
+                          backgroundColor: context.colors.errorContainer,
+                          foregroundColor: context.isDark ? Colors.white : context.colors.onErrorContainer,
                           minimumSize: const Size(64, 48),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
@@ -256,6 +259,7 @@ class TrashView extends ConsumerWidget {
                   ],
                 ),
               ),
+            ),
             ),
     );
   }
@@ -336,7 +340,7 @@ class _TrashRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: urgent
                     ? context.colors.errorContainer.withValues(alpha: context.isDark ? 0.45 : 1)
-                    : (context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed),
+                    : (context.tokens.tonal),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -351,7 +355,7 @@ class _TrashRow extends StatelessWidget {
                     style: context.texts.labelSmall?.copyWith(
                       color: urgent
                           ? context.colors.error
-                          : (context.isDark ? context.colors.onPrimaryContainer : context.colors.primary),
+                          : context.tokens.onTonal,
                     ),
                   ),
                 ],

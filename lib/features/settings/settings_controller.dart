@@ -43,4 +43,19 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> setVaultAutoLock(int minutes) =>
       _update(state.copyWith(vaultAutoLockMinutes: minutes));
+
+  Future<void> setAppLock({required bool enabled, bool? biometric}) => _update(
+        state.copyWith(
+          appLockEnabled: enabled,
+          appLockBiometric: enabled ? (biometric ?? state.appLockBiometric) : false,
+        ),
+      );
+
+  Future<void> setAppLockBiometric(bool value) =>
+      _update(state.copyWith(appLockBiometric: value));
+
+  Future<void> setAppLockTimeout(int seconds) =>
+      _update(state.copyWith(appLockTimeoutSeconds: seconds));
+
+  Future<void> setSecureScreens(bool value) => _update(state.copyWith(secureScreens: value));
 }

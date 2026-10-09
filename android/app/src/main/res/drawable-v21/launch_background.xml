@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Launch screen for Android 8 – 11: app icon centred on the app background. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/fv_splash_background" />
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/splash_logo" />
     </item>
 </layer-list>

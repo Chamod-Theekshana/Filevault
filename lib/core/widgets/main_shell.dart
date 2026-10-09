@@ -1,10 +1,9 @@
 import 'package:filevault/core/extensions/context_extensions.dart';
-import 'package:filevault/features/operations/widgets/operation_progress_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Scaffold with the four-tab navigation bar from the design. The floating
-/// operation panel is stacked above the body so it survives tab switches.
+/// Scaffold with the four-tab navigation bar. The operation progress card
+/// is drawn globally above every screen by `FileVaultApp`.
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -13,17 +12,7 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          navigationShell,
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: OperationProgressPanel(),
-          ),
-        ],
-      ),
+      body: navigationShell,
       bottomNavigationBar: FvBottomNav(
         currentIndex: navigationShell.currentIndex,
         onSelect: (int index) => navigationShell.goBranch(
@@ -93,10 +82,10 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color pill = selected
-        ? (context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed)
+        ? (context.tokens.tonal)
         : Colors.transparent;
     final Color fg = selected
-        ? (context.isDark ? context.colors.primary : context.colors.primary)
+        ? context.colors.primary
         : context.colors.onSurfaceVariant;
     return Semantics(
       button: true,

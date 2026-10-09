@@ -113,7 +113,7 @@ class AppLocalizations {
   String get navSettings => 'Settings';
 
   // ---------------------------------------------------------- onboarding
-  String get permissionSetup => 'Permission Setup';
+  String get permissionSetup => 'Welcome';
   String get storageAccess => 'STORAGE ACCESS';
   String stepOf(int step, int total) => 'Step $step of $total';
   String get permissionTitle => 'Allow access to manage files';
@@ -145,7 +145,7 @@ class AppLocalizations {
   String get internalStorage => 'Internal storage';
   String get sdCard => 'SD card';
   String get usbStorage => 'USB storage';
-  String get cleanUp => 'Clean Up';
+  String get cleanUp => 'Free up space';
   String get eject => 'Eject';
   String get categories => 'Categories';
   String categoriesCount(int n) => '$n categories';
@@ -234,7 +234,7 @@ class AppLocalizations {
   String get renamed => 'Renamed';
 
   // ---------------------------------------------------------- properties
-  String get propertiesTitle => 'File Properties';
+  String get propertiesTitle => 'Properties';
   String get contains => 'Contains';
   String get location => 'Location';
   String get mimeType => 'MIME type';
@@ -358,7 +358,7 @@ class AppLocalizations {
   String get noResultsTitle => 'Nothing matched';
   String get noResultsBody =>
       'Try a different spelling, remove filters or run a deep scan to index new files.';
-  String get deepScan => 'Deep Vault Scan';
+  String get deepScan => 'Rebuild index';
   String get deepScanBody => 'Re-index every folder, including hidden files';
   String get scan => 'Scan';
   String get scanning => 'Scanning…';
@@ -393,8 +393,8 @@ class AppLocalizations {
   String get junkSub => 'Temporary files & logs';
   String get emptyFolders => 'Empty folders';
   String emptyFoldersSub(int n) => '$n unused directory paths';
-  String get smartSweep => 'Smart Deep Sweep';
-  String get smartSweepBody => 'Scan all storage for junk in one tap';
+  String get smartSweep => 'Clean everything safe';
+  String get smartSweepBody => 'Junk, temporary files and empty folders in one pass';
   String get largestFolders => 'Largest folders';
   String get analyzing => 'Analyzing storage…';
   String get duplicatesEmpty => 'No duplicates found. Your storage is tidy.';
@@ -459,7 +459,7 @@ class AppLocalizations {
 
   // --------------------------------------------------------------- vault
   String get vaultTitle => 'Secure Folder';
-  String get vaultSubtitle => 'AES-256 encrypted, offline';
+  String get vaultSubtitle => 'Encrypted on this phone';
   String get vaultSetupTitle => 'Set up your Secure Folder';
   String get vaultSetupBody =>
       'Choose a 6-digit PIN. Files you move here are encrypted with AES-256-GCM and hidden from every other app.';
@@ -474,6 +474,10 @@ class AppLocalizations {
   String get vaultBiometricReason => 'Unlock your Secure Folder';
   String get vaultEnableBiometric => 'Use fingerprint to unlock';
   String get vaultEnableBiometricSub => 'Keep PIN as a backup';
+  String get vaultDisableBiometric => 'Stop using fingerprint';
+  String get vaultBiometricNeedsOpen =>
+      'Open the Secure Folder and change this from its menu – it needs your PIN first.';
+  String get biometricFailed => 'Fingerprint not recognised. Use your PIN.';
   String get vaultEmptyTitle => 'Your vault is empty';
   String get vaultEmptyBody =>
       'Add photos, videos or documents. They are encrypted on-device and removed from their original location.';
@@ -492,7 +496,7 @@ class AppLocalizations {
   String get vaultNewPin => 'New PIN';
   String get vaultPinChanged => 'PIN updated';
   String get vaultAutoLock => 'Auto-lock';
-  String get vaultAutoLockSub => 'Lock when the app goes to the background';
+  String get vaultAutoLockSub => 'Also locks every time you leave the Secure Folder';
   String vaultAfterMinutes(int m) => m == 0 ? 'Immediately' : 'After $m min';
   String vaultAdded(int n) => '${itemCount(n)} secured';
   String vaultExported(int n) => '${itemCount(n)} moved out';
@@ -505,29 +509,30 @@ class AppLocalizations {
   String get vaultStorageUsed => 'Vault size';
   String get vaultNotSetUp => 'Not set up';
   String get vaultSecuredWithPin => 'Protected with PIN';
+  String get vaultEnterPinToOpen => 'Enter your PIN to open it';
   String get vaultPickFiles => 'Choose files to secure';
   String get vaultHiddenNote =>
-      'Encrypted files are stored inside FileVault\'s private storage and are never indexed by the gallery.';
+      'Files here are encrypted inside FileVault\'s private storage. Galleries, other apps and computers connected over USB cannot see them.';
 
   // ------------------------------------------------------------ settings
-  String get settingsTitle => 'FileVault Settings';
+  String get settingsTitle => 'Settings';
   String get allFilesAccess => 'All Files Access';
   String get granted => 'Granted';
   String get notGranted => 'Not granted';
-  String get allFilesAccessSub => 'Unrestricted management on internal & SD card';
+  String get allFilesAccessSub => 'FileVault can manage files on internal storage and SD cards';
   String get allFilesAccessMissing =>
       'FileVault can only see its own folders until access is granted';
-  String get scopedStorageNote => 'Scoped storage compliance';
-  String get systemAppInfo => 'System App Info';
+  String get scopedStorageNote => 'Change this in Android settings at any time';
+  String get systemAppInfo => 'App info';
   String get appearance => 'APPEARANCE';
   String get theme => 'Theme';
-  String get themeSub => 'Adjust contrast and ambient tone';
+  String get themeSub => 'Follow the system or pick one';
   String get themeSystem => 'System';
   String get themeLight => 'Light';
   String get themeDark => 'Dark';
-  String get accentColor => 'Accent Color';
+  String get accentColor => 'Accent colour';
   String accentCurrent(String name) => name;
-  String get accentOcean => 'Ocean Blue (System default)';
+  String get accentOcean => 'Ink blue (default)';
   String get accentForest => 'Forest Green';
   String get accentViolet => 'Violet';
   String get accentRose => 'Rose';
@@ -586,6 +591,73 @@ class AppLocalizations {
   String get errorCancelled => 'Cancelled';
   String get errorSameFolder => 'Source and destination are the same';
   String get errorIntoItself => 'Cannot move a folder into itself';
+
+  // ------------------------------------------------------------ app lock
+  String get appLock => 'App lock';
+  String get appLockSub => 'Ask for your PIN or fingerprint to open FileVault';
+  String get appLockTitle => 'FileVault is locked';
+  String get appLockSubtitle => 'Enter your app PIN to continue';
+  String get appLockReason => 'Unlock FileVault';
+  String get appLockCreatePin => 'Choose an app PIN';
+  String get appLockSetupBody =>
+      'Six digits, different from your phone PIN if you can. You will need it every time FileVault opens.';
+  String get appLockUseBiometric => 'Unlock with fingerprint';
+  String get appLockTiming => 'Lock after leaving';
+  String get appLockTimingSub => 'How long FileVault can stay in the background';
+  String lockAfterSeconds(int s) => switch (s) {
+        0 => 'Immediately',
+        < 60 => 'After $s s',
+        _ => 'After ${s ~/ 60} min',
+      };
+  String get appLockChangePin => 'Change app PIN';
+  String get appLockChangePinSub => 'Pick a new 6-digit PIN';
+  String get appLockConfirmTitle => 'Turn off App lock?';
+  String get appLockConfirmOff => 'Enter your app PIN to confirm.';
+  String get appLockOn => 'App lock is on';
+  String get appLockOff => 'App lock is off';
+  String get secureScreens => 'Block screenshots';
+  String get secureScreensSub => 'Also hides FileVault in the recent-apps view';
+  String get secureFolderSection => 'SECURE FOLDER';
+
+  // ----------------------------------------------------------- clipboard
+  String get cut => 'Cut';
+  String get copyTo => 'Copy to…';
+  String get moveTo => 'Move to…';
+  String get pasteLater => 'Paste in any folder';
+  String readyToCopy(int n) => n == 1 ? '1 item ready to copy' : '$n items ready to copy';
+  String readyToMove(int n) => n == 1 ? '1 item ready to move' : '$n items ready to move';
+  String get pasteHint => 'Open the destination folder, then tap Paste';
+  String get batchRename => 'Rename all…';
+  String batchRenameTitle(int n) => 'Rename $n items';
+  String get batchRenameHint => 'New name – numbers are added for you';
+  String batchRenamed(int n) => n == 1 ? '1 item renamed' : '$n items renamed';
+  String get hideFromGallery => 'Hide from gallery';
+  String get showInGallery => 'Show in gallery';
+  String get hiddenFromGallery => 'Folder hidden from galleries';
+  String get shownInGallery => 'Folder visible in galleries again';
+
+  // ------------------------------------------------------------- misc ui
+  String get activity => 'Activity';
+  String get hide => 'Hide';
+  String get storageDetails => 'Details';
+  String freeAmount(String size) => '$size free';
+  String ofTotalUsed(String total, int percent) => 'of $total  ·  $percent% used';
+  String filesProgress(int done, int total) => '$done of $total files';
+  String queuedCount(int n) => n == 1 ? '1 more operation queued' : '$n more operations queued';
+  String get splashTagline => 'Your files, kept close.';
+  String get splashLoading => 'Getting your files ready…';
+  String get vaultSetUpPrompt => 'Set a PIN to start hiding files';
+  String get vaultLockedState => 'Locked';
+  String get vaultOpenState => 'Open';
+  String get vaultPickHint =>
+      'Tap a file to select it. Long-press a folder to secure everything inside.';
+  String vaultSecuring(int n) =>
+      n == 1 ? 'Securing 1 item…' : 'Securing $n items…';
+  String doneCopied(int n) => n == 1 ? '1 file copied' : '$n files copied';
+  String doneMoved(int n) => n == 1 ? '1 item moved' : '$n items moved';
+  String doneDeleted(int n) => n == 1 ? '1 item deleted' : '$n items deleted';
+  String doneRestored(int n) => n == 1 ? '1 item restored' : '$n items restored';
+  String get errorVaultLocked => 'The Secure Folder was locked before the transfer started';
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

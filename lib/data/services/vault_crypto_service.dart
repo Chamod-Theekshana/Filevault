@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:filevault/core/constants/app_constants.dart';
 import 'package:filevault/core/errors/failure.dart';
 import 'package:filevault/core/utils/isolate_worker.dart';
+import 'package:filevault/data/services/native_vault_crypto.dart';
 import 'package:pointycastle/export.dart';
 
 /// AES-256-GCM file encryption for the Secure Folder.
@@ -26,6 +27,10 @@ class VaultCryptoService {
   static const int headerLength = 25;
   static const int tagLength = 16;
   static const int keyLength = 32;
+
+  /// Upper bound accepted for a header's chunk size (protects against
+  /// corrupt files asking for absurd buffers).
+  static const int maxChunkSize = 64 * 1024 * 1024;
 
   // ------------------------------------------------------------ keys
 
@@ -84,13 +89,25 @@ class VaultCryptoService {
 
   // ----------------------------------------------------------- files
 
+  /// Encrypts [source] into [destination]. Uses the native AES-GCM engine on
+  /// Android (an order of magnitude faster, which is what makes large videos
+  /// practical) and the pure-Dart engine everywhere else.
   Future<void> encryptFile(
     String source,
     String destination,
     Uint8List key, {
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
-  }) {
+  }) async {
+    final bool native = await NativeVaultCrypto.instance.encryptFile(
+      source,
+      destination,
+      key,
+      chunkSize: AppConstants.vaultNativeChunkBytes,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    );
+    if (native) return;
     return IsolateWorker.run<List<Object>, void>(
       <Object>[source, destination, key, AppConstants.vaultChunkBytes],
       _encryptJob,
@@ -106,7 +123,15 @@ class VaultCryptoService {
     Uint8List key, {
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
-  }) {
+  }) async {
+    final bool native = await NativeVaultCrypto.instance.decryptFile(
+      source,
+      destination,
+      key,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    );
+    if (native) return;
     return IsolateWorker.run<List<Object>, void>(
       <Object>[source, destination, key],
       _decryptJob,
@@ -126,14 +151,24 @@ class VaultCryptoService {
     final Uint8List prefix = randomBytes(8);
     final Uint8List header = _buildHeader(chunkSize, prefix, total);
     final RandomAccessFile input = src.openSync();
-    final RandomAccessFile output = File(destination).openSync(mode: FileMode.writeOnly);
+    final RandomAccessFile output;
+    try {
+      output = File(destination).openSync(mode: FileMode.writeOnly);
+    } catch (_) {
+      _closeQuietly(input);
+      rethrow;
+    }
     try {
       output.writeFromSync(header);
       final int chunks = total == 0 ? 1 : (total + chunkSize - 1) ~/ chunkSize;
       int done = 0;
       for (int i = 0; i < chunks; i++) {
-        final Uint8List plain = input.readSync(chunkSize);
         final bool last = i == chunks - 1;
+        final int want = last ? total - i * chunkSize : chunkSize;
+        final Uint8List plain = input.readSync(want);
+        if (plain.length != want) {
+          throw const IoFailure(message: 'The file changed while it was being encrypted');
+        }
         final GCMBlockCipher cipher = GCMBlockCipher(AESEngine())
           ..init(true, AEADParameters(KeyParameter(key), tagLength * 8, _nonce(prefix, i), _aad(header, i, last)));
         output.writeFromSync(cipher.process(plain));
@@ -159,7 +194,13 @@ class VaultCryptoService {
     final String destination = args[1] as String;
     final Uint8List key = args[2] as Uint8List;
     final RandomAccessFile input = File(source).openSync();
-    final RandomAccessFile output = File(destination).openSync(mode: FileMode.writeOnly);
+    final RandomAccessFile output;
+    try {
+      output = File(destination).openSync(mode: FileMode.writeOnly);
+    } catch (_) {
+      _closeQuietly(input);
+      rethrow;
+    }
     try {
       final Uint8List header = input.readSync(headerLength);
       if (header.length != headerLength ||
@@ -172,6 +213,9 @@ class VaultCryptoService {
       }
       final ByteData view = ByteData.sublistView(header);
       final int chunkSize = view.getUint32(5);
+      if (chunkSize <= 0 || chunkSize > maxChunkSize) {
+        throw const IoFailure(message: 'Corrupt FileVault header');
+      }
       final Uint8List prefix = header.sublist(9, 17);
       final int total = view.getUint64(17);
       final int chunks = total == 0 ? 1 : (total + chunkSize - 1) ~/ chunkSize;
