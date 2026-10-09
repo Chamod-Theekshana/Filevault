@@ -1,15 +1,16 @@
 package com.filevault.app
 
-import io.flutter.embedding.android.FlutterFragmentActivity
+import com.ryanheise.audioservice.AudioServiceFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
 /**
  * Hosts the Flutter UI and registers FileVault's platform channels.
  *
- * Extends [FlutterFragmentActivity] because the biometric prompt used by the
- * App Lock and the Secure Folder (local_auth) requires a FragmentActivity.
+ * Extends [AudioServiceFragmentActivity] because the biometric prompt used by the
+ * App Lock and the Secure Folder (local_auth) requires a FragmentActivity,
+ * and media playback notifications require AudioService support.
  */
-class MainActivity : FlutterFragmentActivity() {
+class MainActivity : AudioServiceFragmentActivity() {
 
     private var channel: FileVaultChannel? = null
     private var crypto: VaultCryptoChannel? = null

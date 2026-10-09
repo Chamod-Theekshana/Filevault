@@ -7,6 +7,7 @@ import 'package:filevault/domain/models/file_category.dart';
 import 'package:filevault/domain/models/file_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:path/path.dart' as p;
 
 /// Audio player with a queue built from the files in the same folder.
@@ -43,7 +44,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
     try {
       await _player.setAudioSources(
         <AudioSource>[
-          for (final FileEntry e in widget.queue) AudioSource.file(e.path),
+          for (final FileEntry e in widget.queue) AudioSource.file(e.path, tag: MediaItem(id: e.path, title: e.stem, album: p.basename(e.parentPath))),
         ],
         initialIndex: _index,
       );

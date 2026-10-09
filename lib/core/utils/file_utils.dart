@@ -12,7 +12,7 @@ abstract final class FileUtils {
     'tif', 'tiff', 'raw', 'dng', 'cr2', 'nef', 'ico',
   };
   static const Set<String> videoExt = <String>{
-    'mp4', 'mkv', 'webm', 'mov', 'avi', '3gp', 'm4v', 'ts', 'flv', 'wmv', 'mts',
+    'mp4', 'mkv', 'webm', 'mov', 'avi', '3gp', 'm4v', 'flv', 'wmv',
   };
   static const Set<String> audioExt = <String>{
     'mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga', 'opus', 'wma', 'amr',
@@ -22,7 +22,7 @@ abstract final class FileUtils {
     'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp',
     'txt', 'rtf', 'md', 'csv', 'epub', 'mobi', 'json', 'xml', 'html', 'htm',
     'log', 'ini', 'cfg', 'yaml', 'yml', 'toml', 'dart', 'kt', 'java', 'py',
-    'js', 'ts', 'c', 'cpp', 'h', 'sh', 'sql', 'tex',
+    'js', 'ts', 'mjs', 'cjs', 'mts', 'cts', 'c', 'cpp', 'h', 'sh', 'sql', 'tex',
   };
   static const Set<String> archiveExt = <String>{
     'zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'jar', 'war',
@@ -30,7 +30,7 @@ abstract final class FileUtils {
   static const Set<String> apkExt = <String>{'apk', 'apks', 'xapk', 'aab'};
   static const Set<String> textExt = <String>{
     'txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'log', 'ini', 'cfg',
-    'yaml', 'yml', 'toml', 'dart', 'kt', 'java', 'py', 'js', 'ts', 'c', 'cpp',
+    'yaml', 'yml', 'toml', 'dart', 'kt', 'java', 'py', 'js', 'ts', 'mjs', 'cjs', 'mts', 'cts', 'c', 'cpp',
     'h', 'sh', 'sql', 'tex', 'properties', 'gradle', 'kts', 'conf', 'env',
     'srt', 'vtt', 'rtf',
   };
