@@ -27,6 +27,7 @@ abstract final class AppRoutes {
   static const String textEditor = '/viewer/text';
   static const String pdfViewer = '/viewer/pdf';
   static const String apkInfo = '/viewer/apk';
+  static const String appLockSetup = '/security/app-lock';
 
   /// Builds `route?path=<encoded>` (+ extra query params).
   static String withPath(String route, String path, {Map<String, String>? extra}) {

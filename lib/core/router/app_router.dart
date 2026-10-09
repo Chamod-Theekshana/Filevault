@@ -1,5 +1,6 @@
 import 'package:filevault/core/constants/app_constants.dart';
 import 'package:filevault/core/router/app_routes.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:filevault/core/widgets/main_shell.dart';
 import 'package:filevault/domain/models/file_category.dart';
 import 'package:filevault/domain/models/file_entry.dart';
@@ -14,6 +15,7 @@ import 'package:filevault/features/onboarding/onboarding_view.dart';
 import 'package:filevault/features/onboarding/splash_view.dart';
 import 'package:filevault/features/operations/operations_view.dart';
 import 'package:filevault/features/search/search_view.dart';
+import 'package:filevault/features/security/app_lock_setup_view.dart';
 import 'package:filevault/features/settings/settings_view.dart';
 import 'package:filevault/features/trash/trash_view.dart';
 import 'package:filevault/features/vault/vault_setup_view.dart';
@@ -38,6 +40,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
+    observers: <NavigatorObserver>[PopupTracker()],
     routes: <RouteBase>[
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashView()),
       GoRoute(path: AppRoutes.onboarding, builder: (_, _) => const OnboardingView()),
@@ -48,11 +51,13 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             navigatorKey: _shellKey,
+            observers: <NavigatorObserver>[PopupTracker()],
             routes: <RouteBase>[
               GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeView()),
             ],
           ),
           StatefulShellBranch(
+            observers: <NavigatorObserver>[PopupTracker()],
             routes: <RouteBase>[
               GoRoute(
                 path: AppRoutes.browse,
@@ -61,11 +66,13 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             ],
           ),
           StatefulShellBranch(
+            observers: <NavigatorObserver>[PopupTracker()],
             routes: <RouteBase>[
               GoRoute(path: AppRoutes.search, builder: (_, _) => const SearchView()),
             ],
           ),
           StatefulShellBranch(
+            observers: <NavigatorObserver>[PopupTracker()],
             routes: <RouteBase>[
               GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsView()),
             ],
@@ -151,6 +158,14 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             builder: (_, _) => const VaultSetupView(),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.appLockSetup,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (_, GoRouterState state) {
+          final Map<String, Object?>? extra = state.extra as Map<String, Object?>?;
+          return AppLockSetupView(changeOnly: extra?['changeOnly'] == true);
+        },
       ),
       GoRoute(
         path: AppRoutes.imageViewer,

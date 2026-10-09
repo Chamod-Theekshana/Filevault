@@ -7,7 +7,7 @@ enum OperationType { copy, move, delete, rename, create, extract, compress }
 enum OperationStatus { queued, running, paused, completed, error, cancelled, waitingForConflict }
 
 @freezed
-class OperationTask with _$OperationTask {
+abstract class OperationTask with _$OperationTask {
   const factory OperationTask({
     required String id,
     required OperationType type,

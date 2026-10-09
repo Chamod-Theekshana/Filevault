@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'browser_state.dart';
@@ -9,6 +9,7 @@ part of 'browser_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $BrowserStateCopyWith<BrowserState> get copyWith => _$BrowserStateCopyWithImpl<B
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BrowserState&&const DeepCollectionEquality().equals(other.breadcrumbs, breadcrumbs)&&(identical(other.viewMode, viewMode) || other.viewMode == viewMode)&&(identical(other.sortField, sortField) || other.sortField == sortField)&&(identical(other.sortDirection, sortDirection) || other.sortDirection == sortDirection)&&(identical(other.foldersFirst, foldersFirst) || other.foldersFirst == foldersFirst)&&(identical(other.showHidden, showHidden) || other.showHidden == showHidden)&&const DeepCollectionEquality().equals(other.selectedPaths, selectedPaths)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading));
+  final _this = this as BrowserState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BrowserState&&const DeepCollectionEquality().equals(other.breadcrumbs, _this.breadcrumbs)&&(identical(other.viewMode, _this.viewMode) || other.viewMode == _this.viewMode)&&(identical(other.sortField, _this.sortField) || other.sortField == _this.sortField)&&(identical(other.sortDirection, _this.sortDirection) || other.sortDirection == _this.sortDirection)&&(identical(other.foldersFirst, _this.foldersFirst) || other.foldersFirst == _this.foldersFirst)&&(identical(other.showHidden, _this.showHidden) || other.showHidden == _this.showHidden)&&const DeepCollectionEquality().equals(other.selectedPaths, _this.selectedPaths)&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(breadcrumbs),viewMode,sortField,sortDirection,foldersFirst,showHidden,const DeepCollectionEquality().hash(selectedPaths),isLoading);
+int get hashCode {
+  final _this = this as BrowserState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.breadcrumbs),_this.viewMode,_this.sortField,_this.sortDirection,_this.foldersFirst,_this.showHidden,const DeepCollectionEquality().hash(_this.selectedPaths),_this.isLoading);
+}
 
 @override
 String toString() {
-  return 'BrowserState(breadcrumbs: $breadcrumbs, viewMode: $viewMode, sortField: $sortField, sortDirection: $sortDirection, foldersFirst: $foldersFirst, showHidden: $showHidden, selectedPaths: $selectedPaths, isLoading: $isLoading)';
+  final _this = this as BrowserState;
+  return 'BrowserState(breadcrumbs: ${_this.breadcrumbs}, viewMode: ${_this.viewMode}, sortField: ${_this.sortField}, sortDirection: ${_this.sortDirection}, foldersFirst: ${_this.foldersFirst}, showHidden: ${_this.showHidden}, selectedPaths: ${_this.selectedPaths}, isLoading: ${_this.isLoading})';
 }
 
 
@@ -63,7 +69,7 @@ class _$BrowserStateCopyWithImpl<$Res>
 /// Create a copy of BrowserState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? breadcrumbs = null,Object? viewMode = null,Object? sortField = null,Object? sortDirection = null,Object? foldersFirst = null,Object? showHidden = null,Object? selectedPaths = null,Object? isLoading = null,}) {
-  return _then(_self.copyWith(
+  return _then(BrowserState(
 breadcrumbs: null == breadcrumbs ? _self.breadcrumbs : breadcrumbs // ignore: cast_nullable_to_non_nullable
 as List<String>,viewMode: null == viewMode ? _self.viewMode : viewMode // ignore: cast_nullable_to_non_nullable
 as FileViewMode,sortField: null == sortField ? _self.sortField : sortField // ignore: cast_nullable_to_non_nullable
@@ -213,7 +219,7 @@ return $default(_that.breadcrumbs,_that.viewMode,_that.sortField,_that.sortDirec
 
 
 class _BrowserState implements BrowserState {
-  const _BrowserState({final  List<String> breadcrumbs = const <String>['Internal storage'], this.viewMode = FileViewMode.list, this.sortField = FileSortField.name, this.sortDirection = SortDirection.asc, this.foldersFirst = true, this.showHidden = false, final  Set<String> selectedPaths = const <String>{}, this.isLoading = false}): _breadcrumbs = breadcrumbs,_selectedPaths = selectedPaths;
+  const _BrowserState({ List<String> breadcrumbs = const <String>['Internal storage'], this.viewMode = FileViewMode.list, this.sortField = FileSortField.name, this.sortDirection = SortDirection.asc, this.foldersFirst = true, this.showHidden = false,  Set<String> selectedPaths = const <String>{}, this.isLoading = false}): _breadcrumbs = breadcrumbs,_selectedPaths = selectedPaths;
   
 
  final  List<String> _breadcrumbs;
@@ -247,16 +253,18 @@ _$BrowserStateCopyWith<_BrowserState> get copyWith => __$BrowserStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BrowserState&&const DeepCollectionEquality().equals(other._breadcrumbs, _breadcrumbs)&&(identical(other.viewMode, viewMode) || other.viewMode == viewMode)&&(identical(other.sortField, sortField) || other.sortField == sortField)&&(identical(other.sortDirection, sortDirection) || other.sortDirection == sortDirection)&&(identical(other.foldersFirst, foldersFirst) || other.foldersFirst == foldersFirst)&&(identical(other.showHidden, showHidden) || other.showHidden == showHidden)&&const DeepCollectionEquality().equals(other._selectedPaths, _selectedPaths)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BrowserState&&const DeepCollectionEquality().equals(other.breadcrumbs, _breadcrumbs)&&(identical(other.viewMode, viewMode) || other.viewMode == viewMode)&&(identical(other.sortField, sortField) || other.sortField == sortField)&&(identical(other.sortDirection, sortDirection) || other.sortDirection == sortDirection)&&(identical(other.foldersFirst, foldersFirst) || other.foldersFirst == foldersFirst)&&(identical(other.showHidden, showHidden) || other.showHidden == showHidden)&&const DeepCollectionEquality().equals(other.selectedPaths, _selectedPaths)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_breadcrumbs),viewMode,sortField,sortDirection,foldersFirst,showHidden,const DeepCollectionEquality().hash(_selectedPaths),isLoading);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_breadcrumbs),viewMode,sortField,sortDirection,foldersFirst,showHidden,const DeepCollectionEquality().hash(_selectedPaths),isLoading);
+}
 
 @override
 String toString() {
-  return 'BrowserState(breadcrumbs: $breadcrumbs, viewMode: $viewMode, sortField: $sortField, sortDirection: $sortDirection, foldersFirst: $foldersFirst, showHidden: $showHidden, selectedPaths: $selectedPaths, isLoading: $isLoading)';
+    return 'BrowserState(breadcrumbs: $breadcrumbs, viewMode: $viewMode, sortField: $sortField, sortDirection: $sortDirection, foldersFirst: $foldersFirst, showHidden: $showHidden, selectedPaths: $selectedPaths, isLoading: $isLoading)';
 }
 
 

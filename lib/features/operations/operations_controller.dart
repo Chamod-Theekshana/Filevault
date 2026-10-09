@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:filevault/core/di/providers.dart';
+import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/utils/isolate_worker.dart';
+import 'package:filevault/data/services/directory_cache.dart';
 import 'package:filevault/data/services/operation_runner.dart';
 import 'package:filevault/domain/models/archive_entry.dart';
 import 'package:filevault/domain/models/file_operation.dart';
@@ -77,6 +80,8 @@ class OperationsController extends Notifier<OperationsState> {
         vault: ref.read(vaultRepositoryProvider),
         index: ref.read(indexRepositoryProvider),
         collections: ref.read(collectionsRepositoryProvider),
+        mediaSync: ref.read(platformChannelProvider).syncMedia,
+        thumbnails: ref.read(thumbnailServiceProvider),
       );
 
   // ------------------------------------------------------------ enqueue
@@ -132,13 +137,22 @@ class OperationsController extends Notifier<OperationsState> {
         options: OperationOptions(archiveEntries: entries, password: password),
       );
 
-  String enqueueEncrypt(List<String> sources) => _enqueue(OperationType.encrypt, sources);
+  /// The vault key is copied now, while the Secure Folder is unlocked, so the
+  /// transfer still runs if it has to wait in the queue after the user left.
+  String enqueueEncrypt(List<String> sources) => _enqueue(
+        OperationType.encrypt,
+        sources,
+        options: OperationOptions(vaultKey: ref.read(vaultRepositoryProvider).sessionKey()),
+      );
 
   String enqueueDecrypt(List<VaultItem> items, {String? destinationDir}) => _enqueue(
         OperationType.decrypt,
         items.map((VaultItem i) => i.storedName).toList(),
         destination: destinationDir,
-        options: OperationOptions(vaultItems: items),
+        options: OperationOptions(
+          vaultItems: items,
+          vaultKey: ref.read(vaultRepositoryProvider).sessionKey(),
+        ),
       );
 
   String _enqueue(
@@ -185,7 +199,23 @@ class OperationsController extends Notifier<OperationsState> {
     if (op != null && op.status == OperationStatus.queued) {
       _patch(id, (FileOperation o) => o.copyWith(status: OperationStatus.cancelled, finishedAt: DateTime.now()));
       _controls.remove(id);
-      _options.remove(id);
+      final Uint8List? key = _options.remove(id)?.vaultKey;
+      key?.fillRange(0, key.length, 0);
+    }
+  }
+
+  /// Completes when operation [id] has finished (or immediately when it
+  /// already has). Returns null if it is unknown.
+  Future<FileOperation?> waitFor(String id) async {
+    final FileOperation? current = _find(id);
+    if (current == null) return null;
+    if (current.status.isFinished) return current;
+    try {
+      return await _finished.stream
+          .firstWhere((FileOperation o) => o.id == id)
+          .timeout(const Duration(hours: 2));
+    } catch (_) {
+      return null;
     }
   }
 
@@ -253,9 +283,21 @@ class OperationsController extends Notifier<OperationsState> {
     );
 
     _patch(op.id, (FileOperation _) => result);
+    // Folder listings touched by this operation are no longer valid.
+    final DirectoryCache cache = ref.read(directoryCacheProvider);
+    final String? destination = result.destination;
+    if (destination != null) cache.invalidate(destination);
+    for (final String source in result.sources) {
+      cache.invalidate(p.dirname(source));
+      cache.invalidate(source);
+    }
     _controls.remove(op.id);
     _options.remove(op.id);
-    await ref.read(collectionsRepositoryProvider).recordOperation(result);
+    try {
+      await ref.read(collectionsRepositoryProvider).recordOperation(result);
+    } catch (_) {
+      // History is best effort; never block the "finished" event on it.
+    }
     await ref.read(platformChannelProvider).finishOperationNotification(
           title: _title(result),
           text: result.status == OperationStatus.completed
@@ -279,9 +321,16 @@ class OperationsController extends Notifier<OperationsState> {
   String _title(FileOperation op) =>
       notificationTitle?.call(op) ?? '${op.type.name} ${op.totalFiles} files';
 
+  /// Notification body: "42% · 12/120 files · 48 MB/s · photo.jpg".
   String _text(FileOperation op) {
     final String file = op.currentFile ?? '';
-    return '${op.percent}% • ${op.processedFiles}/${op.totalFiles}${file.isEmpty ? '' : ' • $file'}';
+    final List<String> parts = <String>[
+      '${op.percent}%',
+      if (op.totalFiles > 0) '${op.processedFiles}/${op.totalFiles}',
+      if (op.bytesPerSecond > 0) FileSizeFormatter.speed(op.bytesPerSecond),
+      if (file.isNotEmpty) file,
+    ];
+    return parts.join(' · ');
   }
 
   FileOperation? _find(String id) {

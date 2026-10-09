@@ -1,4 +1,7 @@
 import 'package:filevault/core/di/providers.dart';
+import 'package:filevault/core/utils/isolate_worker.dart';
+import 'package:filevault/data/services/platform_channel_service.dart';
+import 'package:filevault/domain/repositories/vault_repository.dart';
 import 'package:filevault/core/extensions/context_extensions.dart';
 import 'package:filevault/core/router/app_routes.dart';
 import 'package:filevault/core/utils/date_formatter.dart';
@@ -8,12 +11,15 @@ import 'package:filevault/core/widgets/fv_common.dart';
 import 'package:filevault/core/widgets/fv_dialogs.dart';
 import 'package:filevault/domain/models/file_entry.dart';
 import 'package:filevault/domain/models/vault_item.dart';
+import 'package:filevault/features/security/app_lock_controller.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
 import 'package:filevault/features/vault/vault_viewmodel.dart';
 import 'package:filevault/features/vault/widgets/pin_pad.dart';
 import 'package:filevault/features/vault/widgets/vault_file_picker.dart';
 import 'package:filevault/features/viewer/open_file.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,6 +30,10 @@ class VaultView extends ConsumerStatefulWidget {
   /// Files queued for encryption once the vault is unlocked.
   final List<String> pendingAdd;
 
+  /// How many Secure Folder screens are in the navigation stack. Used to
+  /// close viewers showing decrypted files when the vault auto-locks.
+  static int openScreens = 0;
+
   @override
   ConsumerState<VaultView> createState() => _VaultViewState();
 }
@@ -31,18 +41,53 @@ class VaultView extends ConsumerStatefulWidget {
 class _VaultViewState extends ConsumerState<VaultView> {
   List<String> _pending = <String>[];
   bool _promptedSetup = false;
+  late final VaultViewModel _vm;
+  late final VaultRepository _repo;
+  late final PlatformChannelService _platform;
+  late final bool _appWideSecure;
 
   @override
   void initState() {
     super.initState();
     _pending = List<String>.of(widget.pendingAdd);
+    _vm = ref.read(vaultProvider.notifier);
+    _repo = ref.read(vaultRepositoryProvider);
+    _platform = ref.read(platformChannelProvider);
+    _appWideSecure = ref.read(settingsProvider).secureWindow;
+    VaultView.openScreens++;
+    // Decrypted previews from an earlier visit are never kept around.
+    _repo.clearTemporaryFiles();
+    // No screenshots, screen recordings or recent-apps previews of the vault.
+    _platform.setSecureWindow(true);
+    // Coming back to the Secure Folder must always ask again: start locked
+    // even if something left the key in memory.
+    if (_repo.isUnlocked && _pending.isEmpty) {
+      _repo.lock();
+      Future<void>.microtask(_vm.lock);
+    } else {
+      Future<void>.microtask(_vm.load);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Leaving the Secure Folder locks it. The key is wiped right away; the
+    // view-model update is deferred because providers must not notify
+    // listeners while the widget tree is being torn down. Transfers that are
+    // still running keep their own copy of the key and finish normally.
+    _repo.lock();
+    _repo.clearTemporaryFiles();
+    VaultView.openScreens--;
+    Future<void>.microtask(_vm.lock);
+    if (!_appWideSecure) _platform.setSecureWindow(false);
+    super.dispose();
   }
 
   void _flushPending() {
     if (_pending.isEmpty) return;
     final List<String> paths = _pending;
     _pending = <String>[];
-    ref.read(vaultProvider.notifier).addFiles(paths);
+    _vm.addFiles(paths);
   }
 
   @override
@@ -51,6 +96,12 @@ class _VaultViewState extends ConsumerState<VaultView> {
     ref.listen<VaultState>(vaultProvider, (VaultState? prev, VaultState next) {
       if (next.unlocked && prev?.unlocked != true) _flushPending();
     });
+    if (state.unlocked && _pending.isNotEmpty) {
+      // Already unlocked (fresh vault right after setup): flush after build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _flushPending();
+      });
+    }
     if (state.loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -76,7 +127,7 @@ class _VaultViewState extends ConsumerState<VaultView> {
   Future<void> _add() async {
     final List<FileEntry>? files = await showVaultFilePicker(context);
     if (files == null || files.isEmpty || !mounted) return;
-    ref.read(vaultProvider.notifier).addFiles(files.map((FileEntry e) => e.path).toList());
+    _vm.addFiles(files.map((FileEntry e) => e.path).toList());
   }
 }
 
@@ -102,6 +153,8 @@ class _VaultLockScreenState extends ConsumerState<_VaultLockScreen> {
 
   Future<void> _maybeBiometric() async {
     if (_triedBiometric) return;
+    // App Lock is asking first; two system prompts at once would fail.
+    if (ref.read(appLockProvider).locked && ref.read(settingsProvider).appLockEnabled) return;
     _triedBiometric = true;
     if (!ref.read(settingsProvider).vaultBiometric) return;
     if (!widget.state.biometricsAvailable) return;
@@ -132,66 +185,91 @@ class _VaultLockScreenState extends ConsumerState<_VaultLockScreen> {
     final String? message = switch (state.error) {
       'wrongPin' => '${context.l10n.vaultWrongPin} • ${context.l10n.vaultAttemptsLeft(state.attemptsLeft)}',
       'cooldown' => context.l10n.vaultLockedFor(state.cooldownSeconds),
-      'biometric' => context.l10n.vaultWrongPin,
+      'biometric' => context.l10n.biometricFailed,
       _ => null,
     };
-    return Scaffold(
-      appBar: FvAppBar(leading: const FvBackButton(), title: context.l10n.vaultTitle),
+    const Color ink = Colors.white;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+      child: Scaffold(
+      backgroundColor: context.tokens.vault,
+      appBar: FvAppBar(
+        backgroundColor: context.tokens.vault,
+        leading: FvIconButton(
+          icon: Icons.arrow_back,
+          tooltip: context.l10n.back,
+          color: ink,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        titleWidget: const SizedBox.shrink(),
+      ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: <Widget>[
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: context.colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: <BoxShadow>[context.tokens.fabShadow],
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          color: ink.withValues(alpha: 0.10),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.key_rounded, size: 34, color: context.tokens.amber),
                       ),
-                      child: Icon(Icons.lock, size: 38, color: context.colors.onPrimary),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(context.l10n.vaultEnterPin, style: context.texts.headlineMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      message ?? context.l10n.vaultSecuredWithPin,
-                      textAlign: TextAlign.center,
-                      style: context.texts.bodyMedium?.copyWith(
-                        color: message == null ? context.colors.onSurfaceVariant : context.colors.error,
+                      const SizedBox(height: 18),
+                      Text(
+                        context.l10n.vaultTitle,
+                        style: context.texts.headlineMedium?.copyWith(color: ink),
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    ShakeOnChange(
-                      trigger: _shake,
-                      child: PinDots(
-                        length: kPinLength,
-                        filled: _pin.length,
-                        error: state.error == 'wrongPin' || cooling,
+                      const SizedBox(height: 8),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        child: Text(
+                          message ?? context.l10n.vaultEnterPinToOpen,
+                          key: ValueKey<String>(message ?? ''),
+                          textAlign: TextAlign.center,
+                          style: context.texts.bodyMedium?.copyWith(
+                            color: message == null ? ink.withValues(alpha: 0.72) : const Color(0xFFFFB4AB),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () async {
-                        final bool ok = await showConfirmDialog(
-                          context,
-                          title: context.l10n.vaultForgotPin,
-                          message: context.l10n.vaultForgotPinBody,
-                          confirmLabel: context.l10n.vaultReset,
-                          destructive: true,
-                          icon: Icons.warning_amber_outlined,
-                        );
-                        if (!ok || !context.mounted) return;
-                        await ref.read(vaultProvider.notifier).reset();
-                        if (context.mounted) context.pop();
-                      },
-                      child: Text(context.l10n.vaultForgotPin),
-                    ),
-                  ],
+                      const SizedBox(height: 28),
+                      ShakeOnChange(
+                        trigger: _shake,
+                        child: PinDots(
+                          length: kPinLength,
+                          filled: _pin.length,
+                          error: state.error == 'wrongPin' || cooling,
+                          onDark: true,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      TextButton(
+                        style: TextButton.styleFrom(foregroundColor: ink.withValues(alpha: 0.85)),
+                        onPressed: () async {
+                          final bool ok = await showConfirmDialog(
+                            context,
+                            title: context.l10n.vaultForgotPin,
+                            message: context.l10n.vaultForgotPinBody,
+                            confirmLabel: context.l10n.vaultReset,
+                            destructive: true,
+                            icon: Icons.warning_amber_outlined,
+                          );
+                          if (!ok || !context.mounted) return;
+                          await ref.read(vaultProvider.notifier).reset();
+                          if (context.mounted) context.pop();
+                        },
+                        child: Text(context.l10n.vaultForgotPin),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -201,13 +279,15 @@ class _VaultLockScreenState extends ConsumerState<_VaultLockScreen> {
                 if (_pin.isNotEmpty) setState(() => _pin = _pin.substring(0, _pin.length - 1));
               },
               enabled: !state.busy && !cooling,
+              onDark: true,
               onBiometric: state.biometricsAvailable && ref.watch(settingsProvider).vaultBiometric
                   ? () => ref.read(vaultProvider.notifier).unlockWithBiometrics()
                   : null,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
           ],
         ),
+      ),
       ),
     );
   }
@@ -271,7 +351,11 @@ class _VaultContent extends ConsumerWidget {
                 if (state.biometricsAvailable)
                   PopupMenuItem<String>(
                     value: 'biometric',
-                    child: Text(context.l10n.vaultEnableBiometric),
+                    child: Text(
+                      ref.read(settingsProvider).vaultBiometric
+                          ? context.l10n.vaultDisableBiometric
+                          : context.l10n.vaultEnableBiometric,
+                    ),
                   ),
                 PopupMenuItem<String>(value: 'reset', child: Text(context.l10n.vaultReset)),
               ],
@@ -325,14 +409,12 @@ class _VaultContent extends ConsumerWidget {
             ),
       floatingActionButton: state.selecting
           ? null
-          : FloatingActionButton.extended(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: Text(context.l10n.vaultAddFiles),
-            ),
+          : null,
       bottomNavigationBar: !state.selecting
           ? null
-          : Material(
+          : ReserveBottomSpace(
+              height: 76,
+              child: Material(
               color: context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainerLowest,
               child: Container(
                 decoration: BoxDecoration(
@@ -355,7 +437,10 @@ class _VaultContent extends ConsumerWidget {
                           if (!ok) return;
                           await vm.deleteSelected();
                         },
-                        style: OutlinedButton.styleFrom(foregroundColor: context.colors.error),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.isDark ? Colors.white : context.colors.error,
+                          side: BorderSide(color: context.colors.error.withValues(alpha: 0.6)),
+                        ),
                         icon: const Icon(Icons.delete_outline, size: 20),
                         label: Text(context.l10n.delete),
                       ),
@@ -383,6 +468,7 @@ class _VaultContent extends ConsumerWidget {
                 ),
               ),
             ),
+            ),
     );
   }
 
@@ -405,29 +491,77 @@ class _VaultContent extends ConsumerWidget {
   }
 
   Future<void> _preview(BuildContext context, WidgetRef ref, VaultItem item) async {
+    final ValueNotifier<double> progress = ValueNotifier<double>(0);
+    final CancelToken cancel = CancelToken();
+    // Captured up front: if the vault locks while decrypting, this screen is
+    // replaced by the lock screen, but the dialog must still be closed.
+    final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+    Route<dynamic>? dialogRoute;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => AlertDialog(
-        content: Row(
-          children: <Widget>[
-            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-            const SizedBox(width: 16),
-            Text(context.l10n.vaultDecrypting),
+      builder: (BuildContext context) {
+        dialogRoute ??= ModalRoute.of(context);
+        return PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(context.l10n.vaultDecrypting),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.texts.bodyMedium,
+              ),
+              const SizedBox(height: 14),
+              ValueListenableBuilder<double>(
+                valueListenable: progress,
+                builder: (BuildContext context, double value, Widget? _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    FvLoadingBar(value: value <= 0 ? null : value),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${(value * 100).round()}%  ·  ${FileSizeFormatter.format(item.size)}',
+                      style: context.texts.labelMedium?.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(onPressed: cancel.cancel, child: Text(context.l10n.cancel)),
           ],
         ),
-      ),
+        );
+      },
     );
-    final String? path = await ref.read(vaultProvider.notifier).decryptForViewing(item);
-    if (!context.mounted) return;
-    Navigator.of(context).pop();
+    final String? path = await ref.read(vaultProvider.notifier).decryptForViewing(
+          item,
+          onProgress: (double f, String? _) => progress.value = f,
+          cancelToken: cancel,
+        );
+    // Remove exactly this dialog – never whatever happens to be on top (an
+    // auto-lock may already have closed it).
+    final Route<dynamic>? route = dialogRoute;
+    if (navigator.mounted && route != null && route.isActive) navigator.removeRoute(route);
+    // The dialog's listener goes away with the next frame; dispose after it.
+    WidgetsBinding.instance.addPostFrameCallback((_) => progress.dispose());
+    if (!context.mounted || cancel.isCancelled) return;
     if (path == null) {
       context.showSnack(context.l10n.vaultOpenFailed);
       return;
     }
     final FileEntry? entry = (await ref.read(fileRepositoryProvider).stat(path)).valueOrNull;
     if (entry == null || !context.mounted) return;
-    await openFileEntry(context, ref, entry);
+    await openFileEntry(context, ref, entry, recordRecent: false);
   }
 }
 

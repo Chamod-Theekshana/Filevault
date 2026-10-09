@@ -4,6 +4,8 @@ import 'package:filevault/core/constants/app_constants.dart';
 import 'package:filevault/core/di/providers.dart';
 import 'package:filevault/core/errors/failure.dart';
 import 'package:filevault/core/errors/result.dart';
+import 'package:filevault/core/utils/isolate_worker.dart';
+import 'package:filevault/core/utils/lifecycle_guard.dart';
 import 'package:filevault/domain/models/vault_item.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
@@ -174,7 +176,9 @@ class VaultViewModel extends Notifier<VaultState> {
 
   Future<bool> unlockWithBiometrics() async {
     state = state.copyWith(busy: true, clearError: true);
-    final Result<void> r = await ref.read(vaultRepositoryProvider).unlockWithBiometrics();
+    // The system prompt must not count as "leaving the app" (auto-lock).
+    final Result<void> r =
+        await LifecycleGuard.run(() => ref.read(vaultRepositoryProvider).unlockWithBiometrics());
     state = state.copyWith(busy: false, error: r.isFailure ? 'biometric' : null);
     if (r.isSuccess) await load();
     return r.isSuccess;
@@ -191,15 +195,28 @@ class VaultViewModel extends Notifier<VaultState> {
     return r.isSuccess;
   }
 
-  Future<void> setBiometrics(bool enabled) async {
-    await ref.read(vaultRepositoryProvider).setBiometricEnabled(enabled);
+  /// Turning fingerprint unlock on needs the vault key, so it only works
+  /// while the Secure Folder is open. Returns false when it could not be
+  /// changed (the setting is then left untouched).
+  Future<bool> setBiometrics(bool enabled) async {
+    final Result<void> r = await ref.read(vaultRepositoryProvider).setBiometricEnabled(enabled);
+    if (r.isFailure) return false;
     await ref.read(settingsProvider.notifier).setVaultBiometric(enabled);
+    return true;
   }
 
+  /// Wipes the key. Decrypted preview copies are removed by the vault screen
+  /// itself (on open and on close) – not here, because an auto-lock can fire
+  /// while another app is still reading a file the user opened from the vault.
   void lock() {
     ref.read(vaultRepositoryProvider).lock();
-    unawaited(ref.read(vaultRepositoryProvider).clearTemporaryFiles());
-    state = state.copyWith(status: VaultStatus.locked, items: const <VaultItem>[], selected: <int>{});
+    if (state.status == VaultStatus.notConfigured) return;
+    state = state.copyWith(
+      status: VaultStatus.locked,
+      items: const <VaultItem>[],
+      selected: <int>{},
+      clearError: true,
+    );
   }
 
   Future<void> reset() async {
@@ -238,8 +255,14 @@ class VaultViewModel extends Notifier<VaultState> {
     await load();
   }
 
-  Future<String?> decryptForViewing(VaultItem item) async {
-    final Result<String> r = await ref.read(vaultRepositoryProvider).decryptToTemp(item);
+  Future<String?> decryptForViewing(
+    VaultItem item, {
+    ProgressCallback? onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final Result<String> r = await ref
+        .read(vaultRepositoryProvider)
+        .decryptToTemp(item, onProgress: onProgress, cancelToken: cancelToken);
     return r.valueOrNull;
   }
 }

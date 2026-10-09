@@ -16,6 +16,10 @@ class FvTokens extends ThemeExtension<FvTokens> {
     required this.fabShadow,
     required this.selectedRow,
     required this.success,
+    required this.tonal,
+    required this.onTonal,
+    required this.vault,
+    required this.onVault,
   });
 
   final Color chipFill;
@@ -28,48 +32,68 @@ class FvTokens extends ThemeExtension<FvTokens> {
   final Color selectedRow;
   final Color success;
 
+  /// Soft brand-tinted fill for icon tiles, tonal buttons and active nav
+  /// pills – the quiet counterpart of the brand fill.
+  final Color tonal;
+
+  /// Content colour on [tonal].
+  final Color onTonal;
+
+  /// Deep ink surface reserved for the Secure Folder card and lock screens,
+  /// so "private" always looks the same everywhere in the app.
+  final Color vault;
+  final Color onVault;
+
   static const FvTokens light = FvTokens(
     chipFill: AppColors.lightChipFill,
     chipText: AppColors.lightChipText,
     amber: AppColors.lightAmber,
     onAmber: AppColors.lightOnSecondaryFixed,
-    cardBorder: AppColors.lightChipFill,
+    cardBorder: AppColors.lightCardBorder,
     ambientShadow: BoxShadow(
-      color: Color(0x140B6E99),
-      blurRadius: 20,
-      spreadRadius: -2,
-      offset: Offset(0, 4),
+      color: Color(0x1418212B),
+      blurRadius: 18,
+      spreadRadius: -6,
+      offset: Offset(0, 6),
     ),
     fabShadow: BoxShadow(
-      color: Color(0x3D0B6E99),
-      blurRadius: 16,
-      spreadRadius: -4,
+      color: Color(0x330B6E99),
+      blurRadius: 18,
+      spreadRadius: -6,
       offset: Offset(0, 8),
     ),
-    selectedRow: AppColors.lightSurfaceContainerHigh,
-    success: Color(0xFF16A34A),
+    selectedRow: AppColors.lightPrimaryFixed,
+    success: Color(0xFF1F8A4C),
+    tonal: AppColors.lightPrimaryFixed,
+    onTonal: AppColors.lightPrimary,
+    vault: Color(0xFF12324A),
+    onVault: Color(0xFFFFFFFF),
   );
 
   static const FvTokens dark = FvTokens(
-    chipFill: AppColors.darkSurfaceContainer,
-    chipText: AppColors.darkOnSurfaceVariant,
+    chipFill: AppColors.darkChipFill,
+    chipText: AppColors.darkChipText,
     amber: AppColors.darkAmber,
     onAmber: AppColors.darkOnSecondaryFixed,
-    cardBorder: AppColors.darkSurfaceContainerHigh,
+    cardBorder: AppColors.darkCardBorder,
     ambientShadow: BoxShadow(
-      color: Color(0x99000000),
-      blurRadius: 24,
-      spreadRadius: -4,
+      color: Color(0x8C000000),
+      blurRadius: 22,
+      spreadRadius: -6,
       offset: Offset(0, 8),
     ),
     fabShadow: BoxShadow(
-      color: Color(0x4038BDF8),
-      blurRadius: 24,
-      spreadRadius: -2,
+      color: Color(0x59000000),
+      blurRadius: 18,
+      spreadRadius: -4,
       offset: Offset(0, 8),
     ),
-    selectedRow: AppColors.darkPrimaryContainer,
-    success: Color(0xFF4ADE80),
+    selectedRow: Color(0xFF173445),
+    success: Color(0xFF5BD18B),
+    tonal: Color(0xFF173445),
+    onTonal: AppColors.darkPrimary,
+    vault: Color(0xFF14354C),
+    onVault: Color(0xFFFFFFFF),
   );
 
   @override
@@ -83,6 +107,10 @@ class FvTokens extends ThemeExtension<FvTokens> {
     BoxShadow? fabShadow,
     Color? selectedRow,
     Color? success,
+    Color? tonal,
+    Color? onTonal,
+    Color? vault,
+    Color? onVault,
   }) {
     return FvTokens(
       chipFill: chipFill ?? this.chipFill,
@@ -94,6 +122,10 @@ class FvTokens extends ThemeExtension<FvTokens> {
       fabShadow: fabShadow ?? this.fabShadow,
       selectedRow: selectedRow ?? this.selectedRow,
       success: success ?? this.success,
+      tonal: tonal ?? this.tonal,
+      onTonal: onTonal ?? this.onTonal,
+      vault: vault ?? this.vault,
+      onVault: onVault ?? this.onVault,
     );
   }
 
@@ -110,6 +142,10 @@ class FvTokens extends ThemeExtension<FvTokens> {
       fabShadow: BoxShadow.lerp(fabShadow, other.fabShadow, t)!,
       selectedRow: Color.lerp(selectedRow, other.selectedRow, t)!,
       success: Color.lerp(success, other.success, t)!,
+      tonal: Color.lerp(tonal, other.tonal, t)!,
+      onTonal: Color.lerp(onTonal, other.onTonal, t)!,
+      vault: Color.lerp(vault, other.vault, t)!,
+      onVault: Color.lerp(onVault, other.onVault, t)!,
     );
   }
 }
@@ -120,7 +156,11 @@ abstract final class AppTheme {
     final ColorScheme scheme = _lightScheme(accentArgb);
     return _build(
       scheme: scheme,
-      tokens: FvTokens.light,
+      tokens: FvTokens.light.copyWith(
+        tonal: Color.lerp(scheme.primaryContainer, Colors.white, 0.86),
+        onTonal: scheme.primary,
+        selectedRow: Color.lerp(scheme.primaryContainer, Colors.white, 0.86),
+      ),
       overlay: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: scheme.surfaceContainerLowest,
@@ -133,7 +173,11 @@ abstract final class AppTheme {
     final ColorScheme scheme = _darkScheme(accentArgb);
     return _build(
       scheme: scheme,
-      tokens: FvTokens.dark,
+      tokens: FvTokens.dark.copyWith(
+        tonal: Color.lerp(scheme.primaryContainer, AppColors.darkSurface, 0.6),
+        onTonal: scheme.primary,
+        selectedRow: Color.lerp(scheme.primaryContainer, AppColors.darkSurface, 0.6),
+      ),
       overlay: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: scheme.surfaceContainer,
@@ -174,49 +218,60 @@ abstract final class AppTheme {
         toolbarHeight: 64,
       ),
       iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 24),
+      // Button labels: white on every fill, and white for text/outlined
+      // buttons in the dark theme so every button reads clearly at night.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(64, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: textTheme.labelLarge,
           backgroundColor: scheme.primaryContainer,
-          foregroundColor: scheme.onPrimary,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.10),
+          disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(64, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          side: BorderSide(color: scheme.outlineVariant, width: 1.5),
-          foregroundColor: scheme.primary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: BorderSide(color: isDark ? scheme.outline : scheme.outlineVariant, width: 1.2),
+          foregroundColor: isDark ? Colors.white : scheme.primary,
           textStyle: textTheme.labelLarge,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           minimumSize: const Size(48, 44),
-          foregroundColor: scheme.primary,
+          foregroundColor: isDark ? Colors.white : scheme.primary,
           textStyle: textTheme.labelLarge,
-          shape: const StadiumBorder(),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primaryContainer,
-        foregroundColor: scheme.onPrimary,
-        elevation: 4,
-        highlightElevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        sizeConstraints: BoxConstraints.tight(const Size(56, 56)),
+        foregroundColor: Colors.white,
+        elevation: 2,
+        highlightElevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        sizeConstraints: BoxConstraints.tight(const Size(58, 58)),
+        extendedTextStyle: textTheme.labelLarge,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor:
             isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         titleTextStyle: textTheme.headlineSmall?.copyWith(color: scheme.onSurface),
         contentTextStyle:
             textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor:
@@ -234,9 +289,15 @@ abstract final class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           side: BorderSide(color: tokens.cardBorder),
         ),
+      ),
+      dividerTheme: DividerThemeData(color: tokens.cardBorder, thickness: 1, space: 1),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+        },
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -268,11 +329,11 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.selected)) return scheme.primaryContainer;
           return Colors.transparent;
         }),
-        checkColor: WidgetStatePropertyAll<Color>(scheme.onPrimary),
+        checkColor: const WidgetStatePropertyAll<Color>(Colors.white),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-          if (states.contains(WidgetState.selected)) return scheme.onPrimary;
+          if (states.contains(WidgetState.selected)) return Colors.white;
           return scheme.outline;
         }),
         trackColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
@@ -305,7 +366,8 @@ abstract final class AppTheme {
         contentTextStyle:
             textTheme.bodyMedium?.copyWith(color: scheme.onInverseSurface),
         actionTextColor: scheme.inversePrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primaryContainer,
@@ -320,7 +382,7 @@ abstract final class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
           selectedBackgroundColor: scheme.primaryContainer,
-          selectedForegroundColor: scheme.onPrimary,
+          selectedForegroundColor: Colors.white,
           backgroundColor: tokens.chipFill,
           foregroundColor: scheme.onSurfaceVariant,
           side: BorderSide.none,
@@ -398,10 +460,11 @@ abstract final class AppTheme {
         accentArgb != null && accentArgb != AppColors.lightPrimaryContainer.toARGB32();
     final Color accent = custom ? Color(accentArgb) : AppColors.darkAccent;
     final Color primary = custom
-        ? Color.lerp(accent, Colors.white, 0.45)!
+        ? Color.lerp(accent, Colors.white, 0.5)!
         : AppColors.darkPrimary;
+    // Strong enough for white labels (WCAG AA) but not neon on dark.
     final Color primaryContainer = custom
-        ? Color.lerp(accent, Colors.black, 0.45)!
+        ? Color.lerp(accent, Colors.black, 0.12)!
         : AppColors.darkPrimaryContainer;
     return ColorScheme(
       brightness: Brightness.dark,

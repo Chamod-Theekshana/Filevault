@@ -1,4 +1,5 @@
 import 'package:filevault/core/extensions/context_extensions.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
 /// 64dp top bar. Either shows the shield wordmark ([showBrand]) or a custom
@@ -34,7 +35,13 @@ class FvAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final Color bg = backgroundColor ?? context.colors.surface;
-    return Material(
+    // FvAppBar is not a Material AppBar, so it sets the status-bar icon
+    // brightness itself (dark icons on light bars and vice versa).
+    final bool darkBar = ThemeData.estimateBrightnessForColor(bg) == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: (darkBar ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(statusBarColor: Colors.transparent),
+      child: Material(
       color: bg,
       child: SafeArea(
         bottom: false,
@@ -89,11 +96,12 @@ class FvAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
 
-/// Shield badge + "FileVault" wordmark.
+/// App icon + "FileVault" wordmark.
 class FvBrand extends StatelessWidget {
   const FvBrand({super.key, this.compact = false});
 
@@ -101,32 +109,42 @@ class FvBrand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double box = compact ? 32 : 40;
+    final double box = compact ? 30 : 36;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          width: box,
-          height: box,
-          decoration: BoxDecoration(
-            color: context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
-            borderRadius: BorderRadius.circular(compact ? 10 : 12),
-          ),
-          child: Icon(
-            Icons.shield_outlined,
-            size: compact ? 18 : 22,
-            color: context.isDark ? context.colors.primary : context.colors.primary,
-          ),
-        ),
-        const SizedBox(width: 12),
+        FvAppIcon(size: box),
+        const SizedBox(width: 10),
         Text(
           context.l10n.appName,
-          style: context.texts.headlineLarge?.copyWith(
-            fontSize: compact ? 22 : 28,
+          style: context.texts.headlineMedium?.copyWith(
+            fontSize: compact ? 20 : 24,
             height: 1,
+            letterSpacing: -0.4,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The real launcher artwork (`assets/images/app_icon.png`), used wherever
+/// the app shows its own icon: splash, top bar, lock screens, About.
+class FvAppIcon extends StatelessWidget {
+  const FvAppIcon({super.key, this.size = 40});
+
+  static const String asset = 'assets/images/app_icon.png';
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      filterQuality: FilterQuality.medium,
+      semanticLabel: context.l10n.appName,
     );
   }
 }
@@ -160,52 +178,12 @@ class FvIconButton extends StatelessWidget {
         onPressed: onPressed,
         style: selected
             ? IconButton.styleFrom(
-                backgroundColor: context.isDark
-                    ? context.colors.primaryContainer
-                    : context.colors.primaryFixed,
+                backgroundColor: context.tokens.tonal,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               )
             : null,
         icon: Icon(icon, size: size),
         color: color ?? (selected ? context.colors.primary : context.colors.onSurfaceVariant),
-      ),
-    );
-  }
-}
-
-/// Round avatar button that opens Settings in the mock-ups.
-class FvAvatarButton extends StatelessWidget {
-  const FvAvatarButton({super.key, required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: context.l10n.settings,
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Center(
-          child: Material(
-            color: context.isDark ? context.colors.primary : context.colors.primaryContainer,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onPressed,
-              child: SizedBox(
-                width: 34,
-                height: 34,
-                child: Icon(
-                  Icons.person,
-                  size: 18,
-                  color: context.colors.onPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

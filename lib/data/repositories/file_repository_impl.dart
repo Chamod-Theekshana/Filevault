@@ -3,6 +3,7 @@ import 'package:filevault/core/utils/isolate_worker.dart';
 import 'package:filevault/data/services/file_system_service.dart';
 import 'package:filevault/domain/models/file_entry.dart';
 import 'package:filevault/domain/repositories/file_repository.dart';
+import 'package:path/path.dart' as p;
 
 class FileRepositoryImpl implements FileRepository {
   const FileRepositoryImpl(this._fs);
@@ -18,6 +19,15 @@ class FileRepositoryImpl implements FileRepository {
 
   @override
   Future<bool> exists(String path) => _fs.exists(path);
+
+  @override
+  Future<Set<String>> existingPaths(List<String> paths) async {
+    try {
+      return await _fs.existing(paths);
+    } catch (_) {
+      return paths.toSet();
+    }
+  }
 
   @override
   bool isRestricted(String path) => _fs.isRestricted(path);
@@ -41,6 +51,22 @@ class FileRepositoryImpl implements FileRepository {
   @override
   Future<Result<int>> countChildren(String path) =>
       Result.guard(() => _fs.countChildren(path));
+
+  @override
+  bool isHiddenFromGallery(String folder) => _fs.existsSync(p.join(folder, '.nomedia'));
+
+  @override
+  Future<Result<List<String>>> setHiddenFromGallery(String folder, {required bool hidden}) =>
+      Result.guard(() => _fs.setNoMedia(folder, hidden: hidden));
+
+  @override
+  Future<Map<String, int>> childCounts(List<String> folders, {required bool showHidden}) async {
+    try {
+      return await _fs.childCounts(folders, showHidden: showHidden);
+    } catch (_) {
+      return const <String, int>{};
+    }
+  }
 
   @override
   Future<Result<DirectoryStats>> directoryStats(String path, {CancelToken? cancelToken}) =>

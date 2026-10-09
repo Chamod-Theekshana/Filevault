@@ -5,18 +5,20 @@ import 'features/browser/browser_view.dart';
 import 'features/operations/widgets/operation_progress_panel.dart';
 
 class AppShell extends ConsumerWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, required this.path});
+
+  final String path;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
           // The main content
-          BrowserView(),
+          BrowserView(path: path),
           
           // The floating operation progress panel
-          OperationProgressPanel(),
+          const OperationProgressPanel(),
         ],
       ),
     );

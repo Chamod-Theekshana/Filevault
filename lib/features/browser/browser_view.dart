@@ -16,8 +16,12 @@ import 'package:filevault/features/archive/widgets/create_archive_sheet.dart';
 import 'package:filevault/features/browser/browser_viewmodel.dart';
 import 'package:filevault/features/browser/widgets/breadcrumb_bar.dart';
 import 'package:filevault/features/browser/widgets/file_actions_sheet.dart';
+import 'package:filevault/features/operations/file_clipboard.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
+import 'package:filevault/features/operations/undo_trash.dart';
+import 'package:filevault/features/operations/widgets/paste_bar.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
+import 'package:filevault/features/vault/vault_actions.dart';
 import 'package:filevault/features/viewer/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,6 +117,37 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
 
   // --------------------------------------------------------- selection ops
 
+  /// Copy / Cut put the selection on the in-app clipboard; the user then
+  /// opens any folder and taps "Paste here".
+  void _toClipboard(BrowserState state, {required bool move}) {
+    final List<String> sources = state.selected.toList();
+    final FileClipboard clipboard = ref.read(fileClipboardProvider.notifier);
+    if (move) {
+      clipboard.cut(sources);
+    } else {
+      clipboard.copy(sources);
+    }
+    _vm.clearSelection();
+    context.showSnack(
+      move ? context.l10n.readyToMove(sources.length) : context.l10n.readyToCopy(sources.length),
+    );
+  }
+
+  void _paste(BrowserState state, FileClipboardState clip) {
+    final OperationsController ops = ref.read(operationsProvider.notifier);
+    if (clip.isCut) {
+      if (clip.paths.every((String path) => p.dirname(path) == state.path)) {
+        context.showSnack(context.l10n.errorSameFolder);
+        return;
+      }
+      ops.enqueueMove(clip.paths, state.path);
+    } else {
+      ops.enqueueCopy(clip.paths, state.path);
+    }
+    ref.read(fileClipboardProvider.notifier).clear();
+  }
+
+  /// "Copy to… / Move to…": choose the destination in a folder picker.
   Future<void> _selectionCopyOrMove(BrowserState state, {required bool move}) async {
     final List<String> sources = state.selected.toList();
     final String? destination = await showFolderPicker(
@@ -150,11 +185,11 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       );
       if (!ok || !mounted) return;
     }
-    final OperationsController ops = ref.read(operationsProvider.notifier);
+    if (!mounted) return;
     if (permanent) {
-      ops.enqueueDelete(sources);
+      ref.read(operationsProvider.notifier).enqueueDelete(sources);
     } else {
-      ops.enqueueTrash(sources);
+      trashWithUndo(context, ref, sources);
     }
     _vm.clearSelection();
   }
@@ -169,9 +204,19 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   }
 
   Future<void> _selectionMore(BrowserState state) async {
-    final String? action = await showSelectionMoreSheet(context, canCompress: true);
+    final String? action = await showSelectionMoreSheet(
+      context,
+      canCompress: true,
+      canBatchRename: state.selected.length > 1,
+    );
     if (action == null || !mounted) return;
     switch (action) {
+      case 'copyTo':
+        await _selectionCopyOrMove(state, move: false);
+      case 'moveTo':
+        await _selectionCopyOrMove(state, move: true);
+      case 'batchRename':
+        await _batchRename(state);
       case 'compress':
         final CreateArchiveRequest? request = await showCreateArchiveSheet(
           context,
@@ -190,27 +235,9 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
             );
         _vm.clearSelection();
       case 'vault':
-        final List<String> files = state.selectedEntries
-            .where((FileEntry e) => !e.isDirectory)
-            .map((FileEntry e) => e.path)
-            .toList();
-        if (files.isEmpty) {
-          context.showSnack(context.l10n.vaultPickFiles);
-          return;
-        }
-        final bool configured = await ref.read(vaultRepositoryProvider).isConfigured();
-        if (!mounted) return;
-        if (!configured) {
-          context.push(AppRoutes.vaultSetup);
-          return;
-        }
-        if (!ref.read(vaultRepositoryProvider).isUnlocked) {
-          context.push(AppRoutes.vault, extra: <String, Object?>{'pendingAdd': files});
-          _vm.clearSelection();
-          return;
-        }
-        ref.read(operationsProvider.notifier).enqueueEncrypt(files);
+        final List<String> paths = state.selected.toList();
         _vm.clearSelection();
+        await moveToSecureFolder(context, ref, paths);
       case 'favorite':
         for (final FileEntry e in state.selectedEntries) {
           if (!mounted) return;
@@ -226,6 +253,22 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
       case 'deleteForever':
         await _selectionDelete(state, permanent: true);
     }
+  }
+
+  Future<void> _batchRename(BrowserState state) async {
+    final List<FileEntry> targets = state.sort.apply(state.selectedEntries);
+    final String? base = await showTextInputDialog(
+      context,
+      title: context.l10n.batchRenameTitle(targets.length),
+      hint: context.l10n.batchRenameHint,
+      initialValue: targets.isEmpty ? '' : targets.first.stem,
+      confirmLabel: context.l10n.rename,
+    );
+    if (base == null || base.trim().isEmpty || !mounted) return;
+    final int renamed = await _vm.batchRename(targets, base.trim());
+    if (!mounted) return;
+    _vm.clearSelection();
+    context.showSnack(context.l10n.batchRenamed(renamed));
   }
 
   Future<void> _create(BrowserState state) async {
@@ -306,6 +349,7 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
   @override
   Widget build(BuildContext context) {
     final BrowserState state = ref.watch(browserProvider(widget.path));
+    final FileClipboardState? clipboard = ref.watch(fileClipboardProvider);
     return PopScope<Object?>(
       canPop: _canPopDirectly(state),
       onPopInvokedWithResult: (bool didPop, Object? _) {
@@ -374,14 +418,20 @@ class _BrowserViewState extends ConsumerState<BrowserView> {
         ),
         bottomNavigationBar: state.selecting
             ? SelectionActionBar(
-                onCopy: () => _selectionCopyOrMove(state, move: false),
-                onMove: () => _selectionCopyOrMove(state, move: true),
+                onCopy: () => _toClipboard(state, move: false),
+                onMove: () => _toClipboard(state, move: true),
                 onDelete: () => _selectionDelete(state),
                 onShare: () => _selectionShare(state),
                 onMore: () => _selectionMore(state),
                 shareEnabled: state.selectedFileCount > 0,
               )
-            : null,
+            : (clipboard != null && !state.restricted)
+                ? PasteBar(
+                    clipboard: clipboard,
+                    onPaste: () => _paste(state, clipboard),
+                    onCancel: () => ref.read(fileClipboardProvider.notifier).clear(),
+                  )
+                : null,
         floatingActionButton: state.selecting || state.restricted
             ? null
             : Padding(
@@ -698,10 +748,10 @@ class _SelectionSummary extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: context.isDark ? context.colors.primaryContainer : Colors.white,
+                color: context.isDark ? context.tokens.tonal : Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.inventory_2_outlined, size: 18, color: context.colors.primary),
+              child: Icon(Icons.inventory_2_outlined, size: 18, color: context.tokens.onTonal),
             ),
             const SizedBox(width: 12),
             Expanded(

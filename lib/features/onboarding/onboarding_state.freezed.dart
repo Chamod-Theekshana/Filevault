@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'onboarding_state.dart';
@@ -9,6 +9,7 @@ part of 'onboarding_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $OnboardingStateCopyWith<OnboardingState> get copyWith => _$OnboardingStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingState&&(identical(other.status, status) || other.status == status)&&(identical(other.isBusy, isBusy) || other.isBusy == isBusy)&&(identical(other.failure, failure) || other.failure == failure));
+  final _this = this as OnboardingState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.isBusy, _this.isBusy) || other.isBusy == _this.isBusy)&&(identical(other.failure, _this.failure) || other.failure == _this.failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,isBusy,failure);
+int get hashCode {
+  final _this = this as OnboardingState;
+  return Object.hash(runtimeType,_this.status,_this.isBusy,_this.failure);
+}
 
 @override
 String toString() {
-  return 'OnboardingState(status: $status, isBusy: $isBusy, failure: $failure)';
+  final _this = this as OnboardingState;
+  return 'OnboardingState(status: ${_this.status}, isBusy: ${_this.isBusy}, failure: ${_this.failure})';
 }
 
 
@@ -63,7 +69,7 @@ class _$OnboardingStateCopyWithImpl<$Res>
 /// Create a copy of OnboardingState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? isBusy = null,Object? failure = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(OnboardingState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as StoragePermissionStatus,isBusy: null == isBusy ? _self.isBusy : isBusy // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -225,16 +231,18 @@ _$OnboardingStateCopyWith<_OnboardingState> get copyWith => __$OnboardingStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingState&&(identical(other.status, status) || other.status == status)&&(identical(other.isBusy, isBusy) || other.isBusy == isBusy)&&(identical(other.failure, failure) || other.failure == failure));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingState&&(identical(other.status, status) || other.status == status)&&(identical(other.isBusy, isBusy) || other.isBusy == isBusy)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,isBusy,failure);
+int get hashCode {
+    return Object.hash(runtimeType,status,isBusy,failure);
+}
 
 @override
 String toString() {
-  return 'OnboardingState(status: $status, isBusy: $isBusy, failure: $failure)';
+    return 'OnboardingState(status: $status, isBusy: $isBusy, failure: $failure)';
 }
 
 

@@ -7,14 +7,26 @@ const int kPinLength = 6;
 
 /// Six-dot PIN indicator with a shake animation on failure.
 class PinDots extends StatelessWidget {
-  const PinDots({super.key, required this.length, required this.filled, this.error = false});
+  const PinDots({
+    super.key,
+    required this.length,
+    required this.filled,
+    this.error = false,
+    this.onDark = false,
+  });
 
   final int length;
   final int filled;
   final bool error;
 
+  /// Drawn on the deep vault ink (lock screens).
+  final bool onDark;
+
   @override
   Widget build(BuildContext context) {
+    final Color fill = onDark ? Colors.white : context.colors.primaryContainer;
+    final Color idle = onDark ? Colors.white.withValues(alpha: 0.45) : context.colors.outlineVariant;
+    final Color bad = onDark ? const Color(0xFFFFB4AB) : context.colors.error;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -26,15 +38,13 @@ class PinDots extends StatelessWidget {
             height: i < filled ? 16 : 14,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: i < filled
-                  ? (error ? context.colors.error : context.colors.primaryContainer)
-                  : Colors.transparent,
+              color: i < filled ? (error ? bad : fill) : Colors.transparent,
               border: Border.all(
                 color: error
-                    ? context.colors.error
+                    ? bad
                     : i < filled
-                        ? context.colors.primaryContainer
-                        : context.colors.outlineVariant,
+                        ? fill
+                        : idle,
                 width: 2,
               ),
             ),
@@ -52,6 +62,7 @@ class PinPad extends StatelessWidget {
     required this.onBackspace,
     this.onBiometric,
     this.enabled = true,
+    this.onDark = false,
   });
 
   final ValueChanged<String> onDigit;
@@ -59,32 +70,50 @@ class PinPad extends StatelessWidget {
   final VoidCallback? onBiometric;
   final bool enabled;
 
+  /// Drawn on the deep vault ink (lock screens).
+  final bool onDark;
+
+  /// Natural height of the keypad (4 rows of 72dp keys).
+  static const double naturalHeight = 288;
+
   @override
   Widget build(BuildContext context) {
+    final Widget pad = _keys();
+    // Short screens (landscape phones, split screen): shrink the keypad so the
+    // PIN dots and message above it always stay visible.
+    final double screenHeight = MediaQuery.sizeOf(context).height;
+    if (screenHeight >= 640) return pad;
+    final double height = (screenHeight * 0.46).clamp(150.0, naturalHeight);
+    return SizedBox(height: height, child: FittedBox(fit: BoxFit.scaleDown, child: pad));
+  }
+
+  Widget _keys() {
     final List<String> keys = <String>['1', '2', '3', '4', '5', '6', '7', '8', '9'];
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         for (int row = 0; row < 3; row++)
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               for (int col = 0; col < 3; col++)
                 _Key(
                   label: keys[row * 3 + col],
                   enabled: enabled,
+                  onDark: onDark,
                   onTap: () => onDigit(keys[row * 3 + col]),
                 ),
             ],
           ),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             if (onBiometric != null)
-              _Key(icon: Icons.fingerprint, enabled: enabled, onTap: onBiometric!)
+              _Key(icon: Icons.fingerprint, enabled: enabled, onDark: onDark, onTap: onBiometric!)
             else
               const SizedBox(width: 84, height: 72),
-            _Key(label: '0', enabled: enabled, onTap: () => onDigit('0')),
-            _Key(icon: Icons.backspace_outlined, enabled: enabled, onTap: onBackspace),
+            _Key(label: '0', enabled: enabled, onDark: onDark, onTap: () => onDigit('0')),
+            _Key(icon: Icons.backspace_outlined, enabled: enabled, onDark: onDark, onTap: onBackspace),
           ],
         ),
       ],
@@ -93,15 +122,28 @@ class PinPad extends StatelessWidget {
 }
 
 class _Key extends StatelessWidget {
-  const _Key({this.label, this.icon, required this.onTap, required this.enabled});
+  const _Key({
+    this.label,
+    this.icon,
+    required this.onTap,
+    required this.enabled,
+    this.onDark = false,
+  });
 
   final String? label;
   final IconData? icon;
   final VoidCallback onTap;
   final bool enabled;
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
+    final Color ink = onDark
+        ? Colors.white.withValues(alpha: enabled ? 1 : 0.4)
+        : (enabled ? context.colors.onSurface : context.colors.outline);
+    final Color iconInk = onDark
+        ? Colors.white.withValues(alpha: enabled ? 0.9 : 0.4)
+        : (enabled ? context.colors.onSurfaceVariant : context.colors.outline);
     return SizedBox(
       width: 84,
       height: 72,
@@ -110,7 +152,9 @@ class _Key extends StatelessWidget {
         child: Material(
           color: label == null
               ? Colors.transparent
-              : (context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainerLow),
+              : onDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : (context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainerLow),
           borderRadius: BorderRadius.circular(18),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -122,17 +166,8 @@ class _Key extends StatelessWidget {
                 : null,
             child: Center(
               child: label != null
-                  ? Text(
-                      label!,
-                      style: context.texts.headlineMedium?.copyWith(
-                        color: enabled ? context.colors.onSurface : context.colors.outline,
-                      ),
-                    )
-                  : Icon(
-                      icon,
-                      size: 26,
-                      color: enabled ? context.colors.onSurfaceVariant : context.colors.outline,
-                    ),
+                  ? Text(label!, style: context.texts.headlineMedium?.copyWith(color: ink))
+                  : Icon(icon, size: 26, color: iconInk),
             ),
           ),
         ),

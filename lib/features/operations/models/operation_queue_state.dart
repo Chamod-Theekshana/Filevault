@@ -4,7 +4,7 @@ import 'operation_task.dart';
 part 'operation_queue_state.freezed.dart';
 
 @freezed
-class OperationQueueState with _$OperationQueueState {
+abstract class OperationQueueState with _$OperationQueueState {
   const factory OperationQueueState({
     @Default([]) List<OperationTask> tasks,
     @Default(false) bool isMinimized, // For the bottom sheet UI

@@ -1,7 +1,6 @@
-import 'package:filevault/core/di/repository_providers.dart';
+import 'package:filevault/core/di/providers.dart';
 import 'package:filevault/domain/models/app_settings.dart';
-import 'package:filevault/domain/models/storage_permission_status.dart';
-import 'package:filevault/domain/repositories/permission_repository.dart';
+import 'package:filevault/domain/models/sort_options.dart';
 import 'package:filevault/domain/repositories/settings_repository.dart';
 import 'package:filevault/features/settings/settings_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,37 +36,44 @@ class SettingsViewModel extends Notifier<SettingsState> {
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
-    await _settings.saveThemeMode(mode);
-    state = state.copyWith(settings: state.settings.copyWith(themeMode: mode));
+    final AppSettings newSettings = state.settings.copyWith(themeMode: mode);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
   Future<void> setAccent(int argb) async {
-    await _settings.saveAccentColor(argb);
-    state = state.copyWith(settings: state.settings.copyWith(accentArgb: argb));
+    final AppSettings newSettings = state.settings.copyWith(accentArgb: argb);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
   Future<void> setShowHidden(bool value) async {
-    await _settings.saveShowHidden(value);
-    state = state.copyWith(settings: state.settings.copyWith(showHiddenFiles: value));
+    final AppSettings newSettings = state.settings.copyWith(showHiddenFiles: value);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
   Future<void> setConfirmDelete(bool value) async {
-    await _settings.saveConfirmBeforeDelete(value);
-    state = state.copyWith(settings: state.settings.copyWith(confirmBeforeDelete: value));
+    final AppSettings newSettings = state.settings.copyWith(confirmBeforeDelete: value);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
   Future<void> setTrashDays(int days) async {
-    await _settings.saveTrashAutoCleanDays(days);
-    state = state.copyWith(settings: state.settings.copyWith(trashAutoCleanDays: days));
+    final AppSettings newSettings = state.settings.copyWith(trashAutoCleanDays: days);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
-  Future<void> setDefaultViewMode(String mode) async {
-    await _settings.saveDefaultViewMode(mode);
-    state = state.copyWith(settings: state.settings.copyWith(defaultViewMode: mode));
+  Future<void> setDefaultViewMode(ViewMode mode) async {
+    final AppSettings newSettings = state.settings.copyWith(defaultViewMode: mode);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 
-  Future<void> setDefaultSort(String sort) async {
-    await _settings.saveDefaultSort(sort);
-    state = state.copyWith(settings: state.settings.copyWith(defaultSort: sort));
+  Future<void> setDefaultSort(SortSpec sort) async {
+    final AppSettings newSettings = state.settings.copyWith(defaultSort: sort);
+    await _settings.save(newSettings);
+    state = state.copyWith(settings: newSettings);
   }
 }

@@ -52,6 +52,10 @@ class VaultRepositoryImpl implements VaultRepository {
   Uint8List? _masterKey;
   Directory? _dir;
 
+  /// Blobs being written right now. The orphan sweep in [items] must never
+  /// touch them (their database row is only inserted once encryption ends).
+  final Set<String> _inFlight = <String>{};
+
   @override
   bool get isUnlocked => _masterKey != null;
 
@@ -61,6 +65,15 @@ class VaultRepositoryImpl implements VaultRepository {
     final Directory support = await getApplicationSupportDirectory();
     final Directory dir = Directory(p.join(support.path, AppConstants.vaultFolderName));
     await dir.create(recursive: true);
+    // App-private storage is already invisible to the media scanner and to
+    // other apps; the marker is a second line of defence on rooted devices
+    // and custom ROMs that index more aggressively.
+    final File marker = File(p.join(dir.path, '.nomedia'));
+    if (!marker.existsSync()) {
+      try {
+        marker.createSync();
+      } catch (_) {}
+    }
     _dir = dir;
     return dir;
   }
@@ -199,6 +212,12 @@ class VaultRepositoryImpl implements VaultRepository {
   }
 
   @override
+  Uint8List? sessionKey() {
+    final Uint8List? key = _masterKey;
+    return key == null ? null : Uint8List.fromList(key);
+  }
+
+  @override
   void lock() {
     final Uint8List? key = _masterKey;
     if (key != null) key.fillRange(0, key.length, 0);
@@ -241,17 +260,41 @@ class VaultRepositoryImpl implements VaultRepository {
       }
     }
     // ...and blobs whose record is gone, so a failed export cannot leak space.
+    // A transfer may finish while this method is suspended above, so the
+    // candidates are re-checked against a *fresh* query and the in-flight set
+    // synchronously right before anything is deleted.
+    final List<File> candidates = <File>[];
     try {
       for (final FileSystemEntity e in dir.listSync(followLinks: false)) {
         final String name = p.basename(e.path);
-        if (e is File && name.endsWith('.fv') && !known.contains(name)) {
-          try {
-            e.deleteSync();
-          } catch (_) {}
+        if (e is File &&
+            (name.endsWith('.fv.part') || (name.endsWith('.fv') && !known.contains(name)))) {
+          candidates.add(e);
         }
       }
     } catch (_) {}
+    if (candidates.isEmpty) return out;
+    final List<Map<String, Object?>> fresh =
+        await _db.db.query('vault_items', columns: <String>['stored_name']);
+    final Set<String> recorded = <String>{
+      for (final Map<String, Object?> row in fresh) row['stored_name']! as String,
+    };
+    for (final File file in candidates) {
+      final String name = p.basename(file.path);
+      final String stored = name.endsWith('.part') ? name.substring(0, name.length - 5) : name;
+      if (_inFlight.contains(stored) || recorded.contains(name)) continue;
+      try {
+        file.deleteSync();
+      } catch (_) {}
+    }
     return out;
+  }
+
+  @override
+  Future<int> itemCount() async {
+    final List<Map<String, Object?>> rows =
+        await _db.db.rawQuery('SELECT COUNT(*) AS n FROM vault_items');
+    return (rows.first['n'] as num?)?.toInt() ?? 0;
   }
 
   @override
@@ -261,8 +304,8 @@ class VaultRepositoryImpl implements VaultRepository {
     return (rows.first['total'] as num?)?.toInt() ?? 0;
   }
 
-  Uint8List _requireKey() {
-    final Uint8List? key = _masterKey;
+  Uint8List _requireKey([Uint8List? provided]) {
+    final Uint8List? key = provided ?? _masterKey;
     if (key == null) throw const VaultLockedFailure(secondsRemaining: 0);
     return key;
   }
@@ -272,17 +315,32 @@ class VaultRepositoryImpl implements VaultRepository {
     String sourcePath, {
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
+    Uint8List? key,
   }) {
     return Result.guard(() async {
-      final Uint8List key = _requireKey();
+      final Uint8List masterKey = _requireKey(key);
       final FileEntry entry = await _fs.stat(sourcePath);
       if (entry.isDirectory) {
         throw const IoFailure(message: 'Folders cannot be added to the vault yet');
       }
       final String storedName = '${const Uuid().v4()}.fv';
       final String target = p.join((await _vaultDir()).path, storedName);
-      await _crypto.encryptFile(sourcePath, target, key,
-          onProgress: onProgress, cancelToken: cancelToken);
+      // Write to a ".part" file and rename only when complete, so neither a
+      // crash nor the orphan sweep can ever see a half-written blob.
+      final String partial = '$target.part';
+      _inFlight.add(storedName);
+      try {
+        await _crypto.encryptFile(sourcePath, partial, masterKey,
+            onProgress: onProgress, cancelToken: cancelToken);
+        await File(partial).rename(target);
+      } catch (_) {
+        _inFlight.remove(storedName);
+        try {
+          final File leftover = File(partial);
+          if (leftover.existsSync()) leftover.deleteSync();
+        } catch (_) {}
+        rethrow;
+      }
       // Record first, then remove the plaintext. If either step fails the
       // whole addition is rolled back, so a file is never lost: the original
       // survives on failure and the vault never holds an orphan blob.
@@ -298,11 +356,13 @@ class VaultRepositoryImpl implements VaultRepository {
           'added_at': DateTime.now().millisecondsSinceEpoch,
         });
       } catch (_) {
+        _inFlight.remove(storedName);
         try {
           await _fs.deleteEntity(target);
         } catch (_) {}
         rethrow;
       }
+      _inFlight.remove(storedName);
       try {
         await _fs.deleteEntity(sourcePath);
       } catch (_) {
@@ -331,17 +391,23 @@ class VaultRepositoryImpl implements VaultRepository {
     String? destinationDir,
     ProgressCallback? onProgress,
     CancelToken? cancelToken,
+    Uint8List? key,
   }) {
     return Result.guard(() async {
-      final Uint8List key = _requireKey();
+      final Uint8List masterKey = _requireKey(key);
       String dir = destinationDir ?? p.dirname(item.originalPath);
-      if (!Directory(dir).existsSync()) {
+      // Restore into the original folder, recreating it when it was removed
+      // in the meantime; fall back to Downloads when that is impossible
+      // (e.g. the SD card it lived on is gone).
+      try {
+        await Directory(dir).create(recursive: true);
+      } catch (_) {
         dir = p.join(AppConstants.primaryStoragePath, AppConstants.downloadsFolder);
         await Directory(dir).create(recursive: true);
       }
       final String target = FileUtils.uniquePathSync(p.join(dir, item.name));
       final String source = p.join((await _vaultDir()).path, item.storedName);
-      await _crypto.decryptFile(source, target, key,
+      await _crypto.decryptFile(source, target, masterKey,
           onProgress: onProgress, cancelToken: cancelToken);
       // Drop the record before the blob so a failure never leaves a listed
       // item whose ciphertext is already gone.
@@ -360,8 +426,12 @@ class VaultRepositoryImpl implements VaultRepository {
     return Result.guard(() async {
       final Uint8List key = _requireKey();
       final Directory tmp = await _tempDir();
-      final String target = p.join(tmp.path, '${item.id}-${item.name}');
-      if (File(target).existsSync()) return target;
+      // One sub-folder per item keeps the real file name, so viewers and
+      // other apps show "holiday.mp4" rather than an internal id.
+      final Directory holder = Directory(p.join(tmp.path, '${item.id}'));
+      await holder.create(recursive: true);
+      final String target = p.join(holder.path, item.name);
+      if (File(target).existsSync() && File(target).lengthSync() == item.size) return target;
       final String source = p.join((await _vaultDir()).path, item.storedName);
       await _crypto.decryptFile(source, target, key,
           onProgress: onProgress, cancelToken: cancelToken);

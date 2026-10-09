@@ -37,17 +37,7 @@ class OnboardingView extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                 children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      FvChip(label: context.l10n.storageAccess, icon: Icons.shield_outlined, dense: true),
-                      const Spacer(),
-                      Text(
-                        context.l10n.stepOf(1, 2),
-                        style: context.texts.labelMedium?.copyWith(color: context.colors.primary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   const _HeroIllustration(),
                   const SizedBox(height: 24),
                   Text(context.l10n.permissionTitle, style: context.texts.headlineMedium),
@@ -113,7 +103,9 @@ class OnboardingView extends ConsumerWidget {
                           },
                     child: Text(
                       denied || blocked ? context.l10n.continueLimited : context.l10n.notNow,
-                      style: context.texts.labelLarge?.copyWith(color: context.colors.onSurfaceVariant),
+                      style: context.isDark
+                          ? null
+                          : context.texts.labelLarge?.copyWith(color: context.colors.onSurfaceVariant),
                     ),
                   ),
                 ],
@@ -248,32 +240,9 @@ class _HeroIllustration extends StatelessWidget {
               child: _Sheet(width: 110, height: 86, color: context.isDark ? context.colors.surfaceContainerHigh : Colors.white),
             ),
           ),
-          Positioned(
-            bottom: 34,
-            child: Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: context.colors.primaryContainer,
-                borderRadius: BorderRadius.circular(26),
-                boxShadow: <BoxShadow>[context.tokens.fabShadow],
-              ),
-              child: Icon(Icons.folder, size: 48, color: context.colors.onPrimary),
-            ),
-          ),
-          Positioned(
-            bottom: 24,
-            right: 118,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: context.tokens.amber,
-                shape: BoxShape.circle,
-                border: Border.all(color: panel, width: 3),
-              ),
-              child: Icon(Icons.lock, size: 18, color: context.tokens.onAmber),
-            ),
+          const Positioned(
+            bottom: 30,
+            child: FvAppIcon(size: 100),
           ),
           Positioned(
             right: 48,

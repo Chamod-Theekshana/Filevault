@@ -1,241 +1,282 @@
-import 'dart:math' as math;
-
 import 'package:filevault/core/extensions/context_extensions.dart';
+import 'package:filevault/core/theme/category_colors.dart';
 import 'package:filevault/core/utils/file_size_formatter.dart';
 import 'package:filevault/core/widgets/fv_common.dart';
+import 'package:filevault/domain/models/category_summary.dart';
+import 'package:filevault/domain/models/file_category.dart';
 import 'package:filevault/domain/models/storage_volume.dart';
+import 'package:filevault/features/home/widgets/home_sections.dart';
 import 'package:flutter/material.dart';
 
-/// Storage summary: donut gauge, used/free numbers, Clean Up action and an
-/// optional removable-volume row.
+/// Home storage summary.
+///
+/// Leads with the number people actually care about ("38.4 GB free"), then a
+/// single bar that shows *what* fills the phone, broken down by category once
+/// the index exists. The removable volume (SD card / USB) sits in the corner
+/// as a compact chip instead of a second card.
 class StorageOverviewCard extends StatelessWidget {
   const StorageOverviewCard({
     super.key,
     required this.primary,
     required this.removable,
+    required this.categories,
+    required this.indexed,
     required this.onCleanUp,
+    required this.onAnalyze,
     required this.onOpenVolume,
   });
 
   final StorageVolume primary;
   final StorageVolume? removable;
+  final List<CategorySummary> categories;
+  final bool indexed;
   final VoidCallback onCleanUp;
+  final VoidCallback onAnalyze;
   final void Function(StorageVolume volume) onOpenVolume;
+
+  static const List<FileCategory> _barCategories = <FileCategory>[
+    FileCategory.images,
+    FileCategory.videos,
+    FileCategory.audio,
+    FileCategory.documents,
+    FileCategory.apks,
+    FileCategory.archives,
+  ];
+
+  List<_Segment> _segments(BuildContext context) {
+    final Brightness b = Theme.of(context).brightness;
+    final int total = primary.totalBytes;
+    if (total <= 0) return const <_Segment>[];
+    final int used = primary.usedBytes;
+    if (!indexed) {
+      return <_Segment>[
+        _Segment(null, used / total, context.colors.primaryContainer, used),
+      ];
+    }
+    final List<_Segment> out = <_Segment>[];
+    int known = 0;
+    for (final FileCategory c in _barCategories) {
+      int bytes = 0;
+      for (final CategorySummary s in categories) {
+        if (s.category == c) bytes = s.totalBytes;
+      }
+      if (bytes <= 0) continue;
+      // The index can lag behind reality; never draw more than is used.
+      if (known + bytes > used) bytes = (used - known).clamp(0, used);
+      known += bytes;
+      out.add(_Segment(c, bytes / total, CategoryColors.ink(b, c), bytes));
+    }
+    final int other = used - known;
+    if (other > 0) {
+      out.add(_Segment(
+        FileCategory.other,
+        other / total,
+        context.isDark ? context.colors.outline : context.colors.outlineVariant,
+        other,
+      ));
+    }
+    return out;
+  }
 
   @override
   Widget build(BuildContext context) {
     final StorageVolume? sd = removable;
+    final bool ready = primary.totalBytes > 0;
+    final List<_Segment> segments = _segments(context);
+    final List<_Segment> legend = List<_Segment>.of(segments)
+      ..sort((_Segment a, _Segment b) => b.bytes.compareTo(a.bytes));
     return FvCard(
-      elevated: true,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              _DonutGauge(fraction: primary.usedFraction),
-              const SizedBox(width: 18),
+              Icon(Icons.smartphone_outlined, size: 16, color: context.colors.onSurfaceVariant),
+              const SizedBox(width: 6),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Text(
+                  primary.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.texts.labelLarge?.copyWith(color: context.colors.onSurfaceVariant),
+                ),
+              ),
+              if (sd != null) _VolumeChip(volume: sd, onTap: () => onOpenVolume(sd)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            ready ? context.l10n.freeAmount(FileSizeFormatter.format(primary.freeBytes)) : context.l10n.loading,
+            style: context.texts.displaySmall?.copyWith(
+              fontSize: 30,
+              height: 1.1,
+              fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (ready)
+            Text(
+              context.l10n.ofTotalUsed(FileSizeFormatter.format(primary.totalBytes), primary.usedPercent),
+              style: context.texts.bodyMedium?.copyWith(
+                color: context.colors.onSurfaceVariant,
+                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              ),
+            ),
+          const SizedBox(height: 14),
+          _UsageBar(segments: segments),
+          if (indexed && legend.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 14,
+              runSpacing: 6,
+              children: <Widget>[
+                for (final _Segment s in legend.take(4))
+                  _LegendDot(
+                    color: s.color,
+                    label: s.category == null
+                        ? context.l10n.used
+                        : categoryLabel(context.l10n, s.category!),
+                    value: FileSizeFormatter.format(s.bytes),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              Flexible(child: _CleanUpButton(onPressed: onCleanUp)),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: onAnalyze,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.smartphone, size: 18, color: context.colors.primary),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            primary.name,
-                            style: context.texts.titleMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      primary.totalBytes == 0
-                          ? context.l10n.loading
-                          : context.l10n.usedOfTotal(
-                              FileSizeFormatter.format(primary.usedBytes),
-                              FileSizeFormatter.format(primary.totalBytes),
-                            ),
-                      style: context.texts.titleSmall?.copyWith(
-                        fontSize: 15,
-                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    Text(
-                      context.l10n.freeSpace(FileSizeFormatter.format(primary.freeBytes)),
-                      style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 10),
-                    _CleanUpChip(onPressed: onCleanUp),
+                    Text(context.l10n.storageDetails),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.chevron_right, size: 18),
                   ],
                 ),
               ),
             ],
           ),
-          if (sd != null) ...<Widget>[
-            const SizedBox(height: 14),
-            Divider(height: 1, color: context.tokens.cardBorder),
-            const SizedBox(height: 12),
-            _RemovableRow(volume: sd, onOpen: () => onOpenVolume(sd)),
-          ],
         ],
       ),
     );
   }
 }
 
-class _CleanUpChip extends StatelessWidget {
-  const _CleanUpChip({required this.onPressed});
+class _Segment {
+  const _Segment(this.category, this.fraction, this.color, this.bytes);
+
+  final FileCategory? category;
+  final double fraction;
+  final Color color;
+  final int bytes;
+}
+
+class _UsageBar extends StatelessWidget {
+  const _UsageBar({required this.segments});
+
+  final List<_Segment> segments;
+
+  @override
+  Widget build(BuildContext context) {
+    final double used = segments.fold<double>(0, (double a, _Segment s) => a + s.fraction).clamp(0.0, 1.0);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 10,
+        child: ColoredBox(
+          color: context.isDark ? context.colors.surfaceContainerHighest : context.colors.surfaceContainer,
+          child: Row(
+            children: <Widget>[
+              for (int i = 0; i < segments.length; i++)
+                if (segments[i].fraction > 0)
+                  Expanded(
+                    flex: (segments[i].fraction * 10000).round().clamp(1, 10000),
+                    child: Container(
+                      margin: EdgeInsets.only(right: i == segments.length - 1 ? 0 : 1.5),
+                      color: segments[i].color,
+                    ),
+                  ),
+              if (used < 1)
+                Expanded(
+                  flex: ((1 - used) * 10000).round().clamp(1, 10000),
+                  child: const SizedBox.shrink(),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label, required this.value});
+
+  final Color color;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label ',
+          style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
+        ),
+        Text(
+          value,
+          style: context.texts.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CleanUpButton extends StatelessWidget {
+  const _CleanUpButton({required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: Material(
-        color: context.isDark
-            ? context.tokens.amber.withValues(alpha: 0.22)
-            : context.colors.secondaryFixed,
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(Icons.auto_awesome, size: 18, color: context.isDark ? context.tokens.amber : context.colors.onSecondaryContainer),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.cleanUp,
-                  style: context.texts.labelLarge?.copyWith(
-                    color: context.isDark ? context.tokens.amber : context.colors.onSecondaryContainer,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RemovableRow extends StatelessWidget {
-  const _RemovableRow({required this.volume, required this.onOpen});
-
-  final StorageVolume volume;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onOpen,
+    final Color ink = context.isDark ? Colors.white : context.colors.onSecondaryContainer;
+    return Material(
+      color: context.isDark
+          ? context.tokens.amber.withValues(alpha: 0.22)
+          : context.colors.secondaryContainer,
       borderRadius: BorderRadius.circular(12),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: context.tokens.chipFill,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              volume.kind == StorageVolumeKind.usb ? Icons.usb : Icons.sd_card_outlined,
-              size: 20,
-              color: context.colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        volume.name,
-                        style: context.texts.titleSmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      '${volume.usedPercent}%',
-                      style: context.texts.labelMedium?.copyWith(
-                        color: context.colors.onSurfaceVariant,
-                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: volume.usedFraction.clamp(0.0, 1.0),
-                    minHeight: 6,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.usedOfTotal(
-                    FileSizeFormatter.format(volume.usedBytes),
-                    FileSizeFormatter.format(volume.totalBytes),
-                  ),
-                  style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: context.colors.onSurfaceVariant),
-        ],
-      ),
-    );
-  }
-}
-
-/// Circular used-space gauge with the percentage in the middle.
-class _DonutGauge extends StatelessWidget {
-  const _DonutGauge({required this.fraction});
-
-  final double fraction;
-
-  @override
-  Widget build(BuildContext context) {
-    final double f = fraction.clamp(0.0, 1.0);
-    return SizedBox(
-      width: 96,
-      height: 96,
-      child: CustomPaint(
-        painter: _DonutPainter(
-          fraction: f,
-          track: context.isDark ? context.colors.surfaceContainerHigh : context.colors.surfaceContainer,
-          fill: context.colors.primaryContainer,
-        ),
-        child: Center(
-          child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                '${(f * 100).round()}%',
-                style: context.texts.headlineSmall?.copyWith(
-                  fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              Icon(Icons.cleaning_services_outlined, size: 18, color: ink),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.cleanUp,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.texts.labelLarge?.copyWith(color: ink),
                 ),
-              ),
-              Text(
-                context.l10n.used,
-                style: context.texts.labelSmall?.copyWith(color: context.colors.onSurfaceVariant),
               ),
             ],
           ),
@@ -245,34 +286,43 @@ class _DonutGauge extends StatelessWidget {
   }
 }
 
-class _DonutPainter extends CustomPainter {
-  const _DonutPainter({required this.fraction, required this.track, required this.fill});
+class _VolumeChip extends StatelessWidget {
+  const _VolumeChip({required this.volume, required this.onTap});
 
-  final double fraction;
-  final Color track;
-  final Color fill;
+  final StorageVolume volume;
+  final VoidCallback onTap;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    const double stroke = 9;
-    final Rect rect = Offset.zero & size;
-    final Rect arcRect = rect.deflate(stroke / 2 + 2);
-    final Paint trackPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..color = track;
-    final Paint fillPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round
-      ..color = fill;
-    canvas.drawArc(arcRect, 0, math.pi * 2, false, trackPaint);
-    if (fraction > 0) {
-      canvas.drawArc(arcRect, -math.pi / 2, math.pi * 2 * fraction, false, fillPaint);
-    }
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.tokens.chipFill,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 5, 8, 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                volume.kind == StorageVolumeKind.usb ? Icons.usb : Icons.sd_card_outlined,
+                size: 15,
+                color: context.colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '${volume.name} · ${volume.usedPercent}%',
+                style: context.texts.labelMedium?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                  fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 16, color: context.colors.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_DonutPainter old) =>
-      old.fraction != fraction || old.track != track || old.fill != fill;
 }

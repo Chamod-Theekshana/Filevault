@@ -93,7 +93,7 @@ class StorageRepositoryImpl implements StorageRepository {
         category: FileCategory.folders,
       ),
     ];
-    final List<QuickAccessEntry> out = <QuickAccessEntry>[];
+    final List<QuickAccessEntry> resolved = <QuickAccessEntry>[];
     for (final QuickAccessEntry c in candidates) {
       String path = c.path;
       if (c.id == 'screenshots' && !Directory(path).existsSync()) {
@@ -101,16 +101,28 @@ class StorageRepositoryImpl implements StorageRepository {
       }
       final bool exists = Directory(path).existsSync();
       if (!exists && c.id != 'downloads') continue;
-      final int count = exists ? await _fs.countChildren(path) : 0;
-      out.add(QuickAccessEntry(
+      resolved.add(QuickAccessEntry(
         id: c.id,
         title: c.title,
         path: path,
         category: c.category,
-        itemCount: count,
         exists: exists,
       ));
     }
+    // One background pass for every folder count instead of one per folder.
+    Map<String, int> counts = const <String, int>{};
+    try {
+      counts = await _fs.childCounts(
+        <String>[
+          for (final QuickAccessEntry e in resolved)
+            if (e.exists) e.path,
+        ],
+        showHidden: false,
+      );
+    } catch (_) {}
+    final List<QuickAccessEntry> out = <QuickAccessEntry>[
+      for (final QuickAccessEntry e in resolved) e.copyWith(itemCount: counts[e.path] ?? 0),
+    ];
     return out;
   }
 }

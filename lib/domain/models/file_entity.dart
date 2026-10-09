@@ -1,12 +1,12 @@
 import 'package:equatable/equatable.dart';
-import 'package:filevault/core/theme/category_colors.dart';
+import 'package:filevault/domain/models/file_category.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'file_entity.freezed.dart';
 
 /// Immutable file-system entry. The real filesystem remains source of truth.
 @freezed
-class FileEntity with _$FileEntity {
+abstract class FileEntity with _$FileEntity {
   const FileEntity._();
 
   const factory FileEntity({

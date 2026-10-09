@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'file_item.dart';
@@ -9,6 +9,7 @@ part of 'file_item.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $FileItemCopyWith<FileItem> get copyWith => _$FileItemCopyWithImpl<FileItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FileItem&&(identical(other.path, path) || other.path == path)&&(identical(other.name, name) || other.name == name)&&(identical(other.size, size) || other.size == size)&&(identical(other.modified, modified) || other.modified == modified)&&(identical(other.type, type) || other.type == type)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden));
+  final _this = this as FileItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FileItem&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.modified, _this.modified) || other.modified == _this.modified)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.isHidden, _this.isHidden) || other.isHidden == _this.isHidden));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,path,name,size,modified,type,isHidden);
+int get hashCode {
+  final _this = this as FileItem;
+  return Object.hash(runtimeType,_this.path,_this.name,_this.size,_this.modified,_this.type,_this.isHidden);
+}
 
 @override
 String toString() {
-  return 'FileItem(path: $path, name: $name, size: $size, modified: $modified, type: $type, isHidden: $isHidden)';
+  final _this = this as FileItem;
+  return 'FileItem(path: ${_this.path}, name: ${_this.name}, size: ${_this.size}, modified: ${_this.modified}, type: ${_this.type}, isHidden: ${_this.isHidden})';
 }
 
 
@@ -63,7 +69,7 @@ class _$FileItemCopyWithImpl<$Res>
 /// Create a copy of FileItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? path = null,Object? name = null,Object? size = null,Object? modified = null,Object? type = null,Object? isHidden = null,}) {
-  return _then(_self.copyWith(
+  return _then(FileItem(
 path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ _$FileItemCopyWith<_FileItem> get copyWith => __$FileItemCopyWithImpl<_FileItem>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FileItem&&(identical(other.path, path) || other.path == path)&&(identical(other.name, name) || other.name == name)&&(identical(other.size, size) || other.size == size)&&(identical(other.modified, modified) || other.modified == modified)&&(identical(other.type, type) || other.type == type)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FileItem&&(identical(other.path, path) || other.path == path)&&(identical(other.name, name) || other.name == name)&&(identical(other.size, size) || other.size == size)&&(identical(other.modified, modified) || other.modified == modified)&&(identical(other.type, type) || other.type == type)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,path,name,size,modified,type,isHidden);
+int get hashCode {
+    return Object.hash(runtimeType,path,name,size,modified,type,isHidden);
+}
 
 @override
 String toString() {
-  return 'FileItem(path: $path, name: $name, size: $size, modified: $modified, type: $type, isHidden: $isHidden)';
+    return 'FileItem(path: $path, name: $name, size: $size, modified: $modified, type: $type, isHidden: $isHidden)';
 }
 
 

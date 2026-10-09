@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'settings_state.dart';
@@ -9,6 +9,7 @@ part of 'settings_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $SettingsStateCopyWith<SettingsState> get copyWith => _$SettingsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.versionLabel, versionLabel) || other.versionLabel == versionLabel)&&(identical(other.permissionStatus, permissionStatus) || other.permissionStatus == permissionStatus));
+  final _this = this as SettingsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.settings, _this.settings) || other.settings == _this.settings)&&(identical(other.versionLabel, _this.versionLabel) || other.versionLabel == _this.versionLabel)&&(identical(other.permissionStatus, _this.permissionStatus) || other.permissionStatus == _this.permissionStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,settings,versionLabel,permissionStatus);
+int get hashCode {
+  final _this = this as SettingsState;
+  return Object.hash(runtimeType,_this.settings,_this.versionLabel,_this.permissionStatus);
+}
 
 @override
 String toString() {
-  return 'SettingsState(settings: $settings, versionLabel: $versionLabel, permissionStatus: $permissionStatus)';
+  final _this = this as SettingsState;
+  return 'SettingsState(settings: ${_this.settings}, versionLabel: ${_this.versionLabel}, permissionStatus: ${_this.permissionStatus})';
 }
 
 
@@ -49,7 +55,7 @@ $Res call({
 });
 
 
-$AppSettingsCopyWith<$Res> get settings;
+
 
 }
 /// @nodoc
@@ -63,23 +69,14 @@ class _$SettingsStateCopyWithImpl<$Res>
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? settings = null,Object? versionLabel = null,Object? permissionStatus = null,}) {
-  return _then(_self.copyWith(
+  return _then(SettingsState(
 settings: null == settings ? _self.settings : settings // ignore: cast_nullable_to_non_nullable
 as AppSettings,versionLabel: null == versionLabel ? _self.versionLabel : versionLabel // ignore: cast_nullable_to_non_nullable
 as String,permissionStatus: null == permissionStatus ? _self.permissionStatus : permissionStatus // ignore: cast_nullable_to_non_nullable
 as StoragePermissionStatus,
   ));
 }
-/// Create a copy of SettingsState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AppSettingsCopyWith<$Res> get settings {
-  
-  return $AppSettingsCopyWith<$Res>(_self.settings, (value) {
-    return _then(_self.copyWith(settings: value));
-  });
-}
+
 }
 
 
@@ -234,16 +231,18 @@ _$SettingsStateCopyWith<_SettingsState> get copyWith => __$SettingsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.versionLabel, versionLabel) || other.versionLabel == versionLabel)&&(identical(other.permissionStatus, permissionStatus) || other.permissionStatus == permissionStatus));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.versionLabel, versionLabel) || other.versionLabel == versionLabel)&&(identical(other.permissionStatus, permissionStatus) || other.permissionStatus == permissionStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,settings,versionLabel,permissionStatus);
+int get hashCode {
+    return Object.hash(runtimeType,settings,versionLabel,permissionStatus);
+}
 
 @override
 String toString() {
-  return 'SettingsState(settings: $settings, versionLabel: $versionLabel, permissionStatus: $permissionStatus)';
+    return 'SettingsState(settings: $settings, versionLabel: $versionLabel, permissionStatus: $permissionStatus)';
 }
 
 
@@ -258,7 +257,7 @@ $Res call({
 });
 
 
-@override $AppSettingsCopyWith<$Res> get settings;
+
 
 }
 /// @nodoc
@@ -280,16 +279,7 @@ as StoragePermissionStatus,
   ));
 }
 
-/// Create a copy of SettingsState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AppSettingsCopyWith<$Res> get settings {
-  
-  return $AppSettingsCopyWith<$Res>(_self.settings, (value) {
-    return _then(_self.copyWith(settings: value));
-  });
-}
+
 }
 
 // dart format on

@@ -49,7 +49,7 @@ class FvCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = EdgeInsets.zero,
-    this.radius = 16,
+    this.radius = 18,
     this.color,
     this.elevated = false,
     this.onTap,
@@ -105,10 +105,10 @@ class FvCountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color bg = amber
         ? context.tokens.amber
-        : color ?? (context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed);
+        : color ?? (context.tokens.tonal);
     final Color fg = amber
         ? context.tokens.onAmber
-        : textColor ?? (context.isDark ? context.colors.onPrimaryContainer : context.colors.primary);
+        : textColor ?? context.tokens.onTonal;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
@@ -143,14 +143,18 @@ class FvSectionHeader extends StatelessWidget {
       padding: padding,
       child: Row(
         children: <Widget>[
-          Text(
+          Flexible(
+            child: Text(
             uppercase ? title.toUpperCase() : title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: uppercase
                 ? context.texts.labelMedium?.copyWith(
                     color: context.colors.onSurfaceVariant,
                     letterSpacing: 0.8,
                   )
                 : context.texts.headlineSmall,
+            ),
           ),
           if (count != null) ...<Widget>[
             const SizedBox(width: 8),
@@ -189,10 +193,10 @@ class FvChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color accent = color ?? context.colors.primary;
     final Color bg = selected
-        ? (context.isDark ? accent.withValues(alpha: 0.18) : context.colors.primaryContainer)
+        ? (context.isDark ? context.tokens.tonal : context.colors.primaryContainer)
         : context.tokens.chipFill;
     final Color fg = selected
-        ? (context.isDark ? accent : context.colors.onPrimary)
+        ? (context.isDark ? (color ?? Colors.white) : Colors.white)
         : context.tokens.chipText;
     return Material(
       color: bg,
@@ -224,7 +228,8 @@ class FvChip extends StatelessWidget {
   }
 }
 
-/// Illustration-style empty state block.
+/// Empty state: a soft tinted disc with the icon, one sentence of context
+/// and (optionally) the single action that gets the user going again.
 class FvEmptyState extends StatelessWidget {
   const FvEmptyState({
     super.key,
@@ -246,41 +251,48 @@ class FvEmptyState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(32, 24, 32, 48),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                color: context.isDark
-                    ? context.colors.surfaceContainerHigh
-                    : context.colors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: context.colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: <BoxShadow>[context.tokens.fabShadow],
-                  ),
-                  child: Icon(icon, size: 32, color: context.colors.onPrimary),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.tokens.tonal.withValues(alpha: context.isDark ? 0.55 : 0.6),
+                      ),
+                    ),
+                    Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.tokens.tonal,
+                      ),
+                      child: Icon(icon, size: 34, color: context.tokens.onTonal),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(title, style: context.texts.headlineMedium, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: context.texts.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...<Widget>[const SizedBox(height: 24), action!],
-          ],
+              const SizedBox(height: 22),
+              Text(title, style: context.texts.headlineSmall, textAlign: TextAlign.center),
+              const SizedBox(height: 6),
+              Text(
+                message,
+                style: context.texts.bodyMedium?.copyWith(color: context.colors.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              if (action != null) ...<Widget>[const SizedBox(height: 22), action!],
+            ],
+          ),
         ),
       ),
     );
@@ -313,7 +325,7 @@ class FvInfoBanner extends StatelessWidget {
     final (Color bg, Color tile, Color ink) = switch (tone) {
       FvBannerTone.primary => (
           context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLow,
-          context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
+          context.tokens.tonal,
           context.colors.primary,
         ),
       FvBannerTone.amber => (
@@ -449,8 +461,8 @@ class FvFilledButton extends StatelessWidget {
       onPressed: busy ? null : onPressed,
       style: destructive
           ? FilledButton.styleFrom(
-              backgroundColor: context.colors.errorContainer,
-              foregroundColor: context.isDark ? context.colors.error : context.colors.onErrorContainer,
+              backgroundColor: context.isDark ? context.colors.errorContainer : context.colors.error,
+              foregroundColor: Colors.white,
             )
           : null,
       child: Row(
@@ -494,11 +506,11 @@ class FvTonalButton extends StatelessWidget {
     final Widget button = FilledButton.tonal(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
-        foregroundColor: context.isDark ? context.colors.onPrimaryContainer : context.colors.primary,
+        backgroundColor: context.tokens.tonal,
+        foregroundColor: context.isDark ? Colors.white : context.tokens.onTonal,
         minimumSize: const Size(64, 44),
         padding: const EdgeInsets.symmetric(horizontal: 18),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: context.texts.labelLarge,
       ),
       child: Row(
@@ -540,7 +552,7 @@ class FvSelectCircle extends StatelessWidget {
         ),
       ),
       child: selected
-          ? Icon(Icons.check, size: size * 0.65, color: context.colors.onPrimary)
+          ? Icon(Icons.check, size: size * 0.65, color: Colors.white)
           : null,
     );
   }

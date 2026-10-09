@@ -691,15 +691,16 @@ class _SmartSweepCard extends StatelessWidget {
           FilledButton(
             onPressed: busy ? null : onPressed,
             style: FilledButton.styleFrom(
-              backgroundColor: context.colors.onPrimary,
-              foregroundColor: context.colors.primaryContainer,
+              backgroundColor: context.isDark ? Colors.white.withValues(alpha: 0.18) : Colors.white,
+              foregroundColor: context.isDark ? Colors.white : context.colors.primaryContainer,
+              disabledBackgroundColor: Colors.white.withValues(alpha: 0.18),
               minimumSize: const Size(64, 40),
             ),
             child: busy
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(context.l10n.scan),
           ),

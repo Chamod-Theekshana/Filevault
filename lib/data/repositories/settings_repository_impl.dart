@@ -36,6 +36,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
       ),
       vaultBiometric: prefs.getBool(AppConstants.prefsVaultBiometric) ?? false,
       vaultAutoLockMinutes: prefs.getInt(AppConstants.prefsVaultAutoLockMinutes) ?? 0,
+      appLockEnabled: prefs.getBool(AppConstants.prefsAppLockEnabled) ?? false,
+      appLockBiometric: prefs.getBool(AppConstants.prefsAppLockBiometric) ?? false,
+      appLockTimeoutSeconds: prefs.getInt(AppConstants.prefsAppLockTimeout) ?? 0,
+      secureScreens: prefs.getBool(AppConstants.prefsSecureScreens) ?? false,
     );
   }
 
@@ -53,6 +57,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     await prefs.setBool(AppConstants.prefsFoldersFirst, s.defaultSort.foldersFirst);
     await prefs.setBool(AppConstants.prefsVaultBiometric, s.vaultBiometric);
     await prefs.setInt(AppConstants.prefsVaultAutoLockMinutes, s.vaultAutoLockMinutes);
+    await prefs.setBool(AppConstants.prefsAppLockEnabled, s.appLockEnabled);
+    await prefs.setBool(AppConstants.prefsAppLockBiometric, s.appLockBiometric);
+    await prefs.setInt(AppConstants.prefsAppLockTimeout, s.appLockTimeoutSeconds);
+    await prefs.setBool(AppConstants.prefsSecureScreens, s.secureScreens);
   }
 
   @override

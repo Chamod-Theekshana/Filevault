@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:filevault/core/errors/failure.dart';
+import 'package:filevault/core/utils/isolate_worker.dart';
 import 'package:filevault/data/services/file_system_service.dart';
 import 'package:filevault/domain/models/file_entry.dart';
 import 'package:filevault/domain/repositories/file_repository.dart';
@@ -81,6 +82,67 @@ void main() {
     await fs.copyFile(source.path, target, onBytes: (int n) => reported += n);
     expect(await File(target).length(), 200000);
     expect(reported, 200000);
+  });
+
+  test('copyFile handles large files in slices and reports every byte', () async {
+    final File source = File(p.join(temp.path, 'large.bin'));
+    const int size = FileSystemService.nativeCopyThreshold + 3 * 1024 * 1024 + 17;
+    final RandomAccessFile raf = await source.open(mode: FileMode.write);
+    await raf.truncate(size);
+    await raf.setPosition(size - 1);
+    await raf.writeByte(42);
+    await raf.close();
+    final String target = p.join(temp.path, 'large-copy.bin');
+    int reported = 0;
+    await fs.copyFile(source.path, target, onBytes: (int n) => reported += n);
+    expect(await File(target).length(), size);
+    expect(reported, size);
+    final RandomAccessFile check = await File(target).open();
+    await check.setPosition(size - 1);
+    expect(await check.readByte(), 42);
+    await check.close();
+  });
+
+  test('a cancelled copy leaves no partial file behind', () async {
+    final File source = File(p.join(temp.path, 'cancel.bin'));
+    final RandomAccessFile raf = await source.open(mode: FileMode.write);
+    await raf.truncate(FileSystemService.nativeCopyThreshold + 1024);
+    await raf.close();
+    final String target = p.join(temp.path, 'cancel-copy.bin');
+    final CancelToken token = CancelToken();
+    await expectLater(
+      fs.copyFile(source.path, target, onBytes: (_) => token.cancel(), cancelToken: token),
+      throwsA(isA<CancelledFailure>()),
+    );
+    expect(File(target).existsSync(), isFalse);
+  });
+
+  test('childCounts and existing work in one pass', () async {
+    await Directory(p.join(temp.path, 'one')).create();
+    await File(p.join(temp.path, 'one', 'a.txt')).writeAsString('a');
+    await File(p.join(temp.path, 'one', '.hidden')).writeAsString('h');
+    await Directory(p.join(temp.path, 'two')).create();
+    final Map<String, int> counts = await fs.childCounts(
+      <String>[p.join(temp.path, 'one'), p.join(temp.path, 'two')],
+      showHidden: false,
+    );
+    expect(counts[p.join(temp.path, 'one')], 1);
+    expect(counts[p.join(temp.path, 'two')], 0);
+    final Set<String> present = await fs.existing(
+      <String>[p.join(temp.path, 'one'), p.join(temp.path, 'missing')],
+    );
+    expect(present, <String>{p.join(temp.path, 'one')});
+  });
+
+  test('setNoMedia adds and removes the marker', () async {
+    final String folder = p.join(temp.path, 'private');
+    await Directory(folder).create();
+    await File(p.join(folder, 'photo.jpg')).writeAsString('x');
+    final List<String> files = await fs.setNoMedia(folder, hidden: true);
+    expect(File(p.join(folder, '.nomedia')).existsSync(), isTrue);
+    expect(files, <String>[p.join(folder, 'photo.jpg')]);
+    await fs.setNoMedia(folder, hidden: false);
+    expect(File(p.join(folder, '.nomedia')).existsSync(), isFalse);
   });
 
   test('flatten returns every nested file', () async {

@@ -10,6 +10,7 @@ import 'package:filevault/domain/models/file_category.dart';
 import 'package:filevault/domain/models/file_entry.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
 import 'package:filevault/features/viewer/open_file.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -77,7 +78,9 @@ class _LargeFilesViewState extends ConsumerState<LargeFilesView> {
       ),
       bottomNavigationBar: _selected.isEmpty
           ? null
-          : _CleanupBar(
+          : ReserveBottomSpace(
+              height: 76,
+              child: _CleanupBar(
               label: context.l10n.deleteSelected(_selected.length),
               onPressed: () async {
                 final bool ok = await showConfirmDialog(
@@ -92,6 +95,7 @@ class _LargeFilesViewState extends ConsumerState<LargeFilesView> {
                 ref.read(operationsProvider.notifier).enqueueTrash(_selected.toList());
                 setState(_selected.clear);
               },
+            ),
             ),
     );
   }
@@ -223,7 +227,9 @@ class _DuplicatesViewState extends ConsumerState<DuplicatesView> {
       ),
       bottomNavigationBar: _selected.isEmpty
           ? null
-          : _CleanupBar(
+          : ReserveBottomSpace(
+              height: 76,
+              child: _CleanupBar(
               label: context.l10n.deleteSelected(_selected.length),
               onPressed: () async {
                 final bool ok = await showConfirmDialog(
@@ -238,6 +244,7 @@ class _DuplicatesViewState extends ConsumerState<DuplicatesView> {
                 ref.read(operationsProvider.notifier).enqueueTrash(_selected.toList());
                 setState(_selected.clear);
               },
+            ),
             ),
     );
   }
@@ -324,39 +331,69 @@ class _JunkCleanerViewState extends ConsumerState<JunkCleanerView> {
               message: context.l10n.optimizationSub,
             );
           }
-          return ListView(
+          return ListView.builder(
             padding: EdgeInsets.fromLTRB(16, 12, 16, 140 + context.padding.bottom),
-            children: <Widget>[
-              FvInfoBanner(
-                tone: FvBannerTone.amber,
-                icon: Icons.warning_amber_outlined,
-                title: context.l10n.junkSub,
-                subtitle: context.l10n.cleanJunkBody(r.items.length, FileSizeFormatter.format(r.totalBytes)),
-              ),
-              const SizedBox(height: 14),
-              FvCard(
-                child: Column(
-                  children: <Widget>[
-                    for (int i = 0; i < r.items.length; i++)
-                      _JunkRow(
-                        item: r.items[i],
-                        kindLabel: _kindLabel(r.items[i].kind),
-                        selected: _selected.contains(r.items[i].path),
-                        last: i == r.items.length - 1,
-                        onTap: () => setState(() {
-                          if (!_selected.remove(r.items[i].path)) _selected.add(r.items[i].path);
-                        }),
-                      ),
-                  ],
+            itemCount: r.items.length + 1,
+            itemBuilder: (BuildContext context, int index) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: FvInfoBanner(
+                    tone: FvBannerTone.amber,
+                    icon: Icons.warning_amber_outlined,
+                    title: context.l10n.junkSub,
+                    subtitle: context.l10n.cleanJunkBody(r.items.length, FileSizeFormatter.format(r.totalBytes)),
+                  ),
+                );
+              }
+
+              final int i = index - 1;
+              final bool isFirst = i == 0;
+              final bool isLast = i == r.items.length - 1;
+              final Radius radius = const Radius.circular(18);
+
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.vertical(
+                    top: isFirst ? radius : Radius.zero,
+                    bottom: isLast ? radius : Radius.zero,
+                  ),
+                  border: Border(
+                    left: BorderSide(color: context.tokens.cardBorder),
+                    right: BorderSide(color: context.tokens.cardBorder),
+                    top: isFirst ? BorderSide(color: context.tokens.cardBorder) : BorderSide.none,
+                    bottom: isLast ? BorderSide(color: context.tokens.cardBorder) : BorderSide.none,
+                  ),
                 ),
-              ),
-            ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(
+                    top: isFirst ? radius : Radius.zero,
+                    bottom: isLast ? radius : Radius.zero,
+                  ),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: _JunkRow(
+                      item: r.items[i],
+                      kindLabel: _kindLabel(r.items[i].kind),
+                      selected: _selected.contains(r.items[i].path),
+                      last: isLast,
+                      onTap: () => setState(() {
+                        if (!_selected.remove(r.items[i].path)) _selected.add(r.items[i].path);
+                      }),
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
       bottomNavigationBar: _selected.isEmpty || data == null
           ? null
-          : _CleanupBar(
+          : ReserveBottomSpace(
+              height: 76,
+              child: _CleanupBar(
               label: context.l10n.cleanSelected(FileSizeFormatter.format(selectedBytes)),
               icon: Icons.cleaning_services_outlined,
               onPressed: () async {
@@ -381,6 +418,7 @@ class _JunkCleanerViewState extends ConsumerState<JunkCleanerView> {
                 setState(_selected.clear);
                 ref.invalidate(junkProvider);
               },
+            ),
             ),
     );
   }

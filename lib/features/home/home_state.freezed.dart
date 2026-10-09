@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'home_state.dart';
@@ -9,6 +9,7 @@ part of 'home_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $HomeStateCopyWith<HomeState> get copyWith => _$HomeStateCopyWithImpl<HomeState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other.volumes, volumes)&&const DeepCollectionEquality().equals(other.categories, categories)&&const DeepCollectionEquality().equals(other.recents, recents)&&const DeepCollectionEquality().equals(other.quickAccess, quickAccess));
+  final _this = this as HomeState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&const DeepCollectionEquality().equals(other.volumes, _this.volumes)&&const DeepCollectionEquality().equals(other.categories, _this.categories)&&const DeepCollectionEquality().equals(other.recents, _this.recents)&&const DeepCollectionEquality().equals(other.quickAccess, _this.quickAccess));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(volumes),const DeepCollectionEquality().hash(categories),const DeepCollectionEquality().hash(recents),const DeepCollectionEquality().hash(quickAccess));
+int get hashCode {
+  final _this = this as HomeState;
+  return Object.hash(runtimeType,_this.isLoading,const DeepCollectionEquality().hash(_this.volumes),const DeepCollectionEquality().hash(_this.categories),const DeepCollectionEquality().hash(_this.recents),const DeepCollectionEquality().hash(_this.quickAccess));
+}
 
 @override
 String toString() {
-  return 'HomeState(isLoading: $isLoading, volumes: $volumes, categories: $categories, recents: $recents, quickAccess: $quickAccess)';
+  final _this = this as HomeState;
+  return 'HomeState(isLoading: ${_this.isLoading}, volumes: ${_this.volumes}, categories: ${_this.categories}, recents: ${_this.recents}, quickAccess: ${_this.quickAccess})';
 }
 
 
@@ -63,7 +69,7 @@ class _$HomeStateCopyWithImpl<$Res>
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? volumes = null,Object? categories = null,Object? recents = null,Object? quickAccess = null,}) {
-  return _then(_self.copyWith(
+  return _then(HomeState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,volumes: null == volumes ? _self.volumes : volumes // ignore: cast_nullable_to_non_nullable
 as List<StorageVolumeInfo>,categories: null == categories ? _self.categories : categories // ignore: cast_nullable_to_non_nullable
@@ -210,7 +216,7 @@ return $default(_that.isLoading,_that.volumes,_that.categories,_that.recents,_th
 
 
 class _HomeState extends HomeState {
-  const _HomeState({this.isLoading = false, final  List<StorageVolumeInfo> volumes = const <StorageVolumeInfo>[], final  List<CategorySummary> categories = const <CategorySummary>[], final  List<FileEntity> recents = const <FileEntity>[], final  List<QuickAccessItem> quickAccess = const <QuickAccessItem>[]}): _volumes = volumes,_categories = categories,_recents = recents,_quickAccess = quickAccess,super._();
+  const _HomeState({this.isLoading = false,  List<StorageVolumeInfo> volumes = const <StorageVolumeInfo>[],  List<CategorySummary> categories = const <CategorySummary>[],  List<FileEntity> recents = const <FileEntity>[],  List<QuickAccessItem> quickAccess = const <QuickAccessItem>[]}): _volumes = volumes,_categories = categories,_recents = recents,_quickAccess = quickAccess,super._();
   
 
 @override@JsonKey() final  bool isLoading;
@@ -253,16 +259,18 @@ _$HomeStateCopyWith<_HomeState> get copyWith => __$HomeStateCopyWithImpl<_HomeSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other._volumes, _volumes)&&const DeepCollectionEquality().equals(other._categories, _categories)&&const DeepCollectionEquality().equals(other._recents, _recents)&&const DeepCollectionEquality().equals(other._quickAccess, _quickAccess));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other.volumes, _volumes)&&const DeepCollectionEquality().equals(other.categories, _categories)&&const DeepCollectionEquality().equals(other.recents, _recents)&&const DeepCollectionEquality().equals(other.quickAccess, _quickAccess));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(_volumes),const DeepCollectionEquality().hash(_categories),const DeepCollectionEquality().hash(_recents),const DeepCollectionEquality().hash(_quickAccess));
+int get hashCode {
+    return Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(_volumes),const DeepCollectionEquality().hash(_categories),const DeepCollectionEquality().hash(_recents),const DeepCollectionEquality().hash(_quickAccess));
+}
 
 @override
 String toString() {
-  return 'HomeState(isLoading: $isLoading, volumes: $volumes, categories: $categories, recents: $recents, quickAccess: $quickAccess)';
+    return 'HomeState(isLoading: $isLoading, volumes: $volumes, categories: $categories, recents: $recents, quickAccess: $quickAccess)';
 }
 
 

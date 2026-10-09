@@ -10,6 +10,8 @@ import 'package:filevault/domain/models/app_settings.dart';
 import 'package:filevault/domain/models/sort_options.dart';
 import 'package:filevault/domain/models/vault_item.dart';
 import 'package:filevault/features/onboarding/onboarding_viewmodel.dart';
+import 'package:filevault/features/security/app_lock_controller.dart';
+import 'package:filevault/features/security/app_lock_screen.dart';
 import 'package:filevault/features/settings/settings_controller.dart';
 import 'package:filevault/features/vault/vault_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +38,7 @@ class SettingsView extends ConsumerWidget {
     final SettingsController controller = ref.read(settingsProvider.notifier);
     final OnboardingState permission = ref.watch(onboardingProvider);
     final VaultState vault = ref.watch(vaultProvider);
+    final AppLockState appLock = ref.watch(appLockProvider);
     final String version = ref.watch(appVersionProvider).valueOrNull ?? '1.0.0';
     final bool granted = permission.status == StoragePermissionStatus.granted;
     return Scaffold(
@@ -63,7 +66,7 @@ class SettingsView extends ConsumerWidget {
                       height: 48,
                       decoration: BoxDecoration(
                         color: granted
-                            ? (context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed)
+                            ? (context.tokens.tonal)
                             : context.colors.errorContainer.withValues(alpha: context.isDark ? 0.4 : 1),
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -174,11 +177,15 @@ class SettingsView extends ConsumerWidget {
                   style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 12,
                   children: <Widget>[
                     for (final int argb in AppColors.accentPresets)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 14),
+                      Semantics(
+                        button: true,
+                        selected: settings.accentArgb == argb,
+                        label: _accentName(context, argb),
                         child: GestureDetector(
                           onTap: () => controller.setAccent(argb),
                           child: Container(
@@ -274,7 +281,7 @@ class SettingsView extends ConsumerWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: context.isDark ? context.colors.primaryContainer : context.colors.primaryFixed,
+                        color: context.tokens.tonal,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.auto_delete_outlined, color: context.colors.primary),
@@ -334,12 +341,70 @@ class SettingsView extends ConsumerWidget {
           FvCard(
             child: Column(
               children: <Widget>[
+                _SwitchRow(
+                  icon: Icons.phonelink_lock_outlined,
+                  title: context.l10n.appLock,
+                  subtitle: context.l10n.appLockSub,
+                  value: settings.appLockEnabled,
+                  onChanged: (bool v) => _toggleAppLock(context, ref, v),
+                ),
+                if (settings.appLockEnabled) ...<Widget>[
+                  if (appLock.biometricsAvailable)
+                    _SwitchRow(
+                      icon: Icons.fingerprint,
+                      title: context.l10n.appLockUseBiometric,
+                      subtitle: context.l10n.vaultEnableBiometricSub,
+                      value: settings.appLockBiometric,
+                      onChanged: (bool v) => ref.read(appLockProvider.notifier).setBiometric(v),
+                    ),
+                  _NavRow(
+                    icon: Icons.timer_outlined,
+                    title: context.l10n.appLockTiming,
+                    subtitle: context.l10n.appLockTimingSub,
+                    trailingText: context.l10n.lockAfterSeconds(settings.appLockTimeoutSeconds),
+                    onTap: () async {
+                      final int? seconds = await showOptionSheet<int>(
+                        context,
+                        title: context.l10n.appLockTiming,
+                        selected: settings.appLockTimeoutSeconds,
+                        options: <(int, String, IconData?)>[
+                          (0, context.l10n.lockAfterSeconds(0), Icons.lock_clock),
+                          (30, context.l10n.lockAfterSeconds(30), null),
+                          (60, context.l10n.lockAfterSeconds(60), null),
+                          (300, context.l10n.lockAfterSeconds(300), null),
+                        ],
+                      );
+                      if (seconds != null) await controller.setAppLockTimeout(seconds);
+                    },
+                  ),
+                  _NavRow(
+                    icon: Icons.password_outlined,
+                    title: context.l10n.appLockChangePin,
+                    subtitle: context.l10n.appLockChangePinSub,
+                    onTap: () => _changeAppLockPin(context, ref),
+                  ),
+                ],
+                _SwitchRow(
+                  icon: Icons.screenshot_monitor_outlined,
+                  title: context.l10n.secureScreens,
+                  subtitle: context.l10n.secureScreensSub,
+                  value: settings.secureScreens,
+                  onChanged: controller.setSecureScreens,
+                  last: true,
+                ),
+              ],
+            ),
+          ),
+          _SectionTitle(icon: Icons.shield_outlined, label: context.l10n.secureFolderSection),
+          FvCard(
+            child: Column(
+              children: <Widget>[
                 _NavRow(
                   icon: Icons.lock_outline,
                   title: context.l10n.secureFolder,
                   subtitle: vault.status == VaultStatus.notConfigured
                       ? context.l10n.vaultNotSetUp
-                      : '${context.l10n.itemCount(vault.items.length)} • ${context.l10n.vaultSubtitle}',
+                      : context.l10n.vaultSubtitle,
                   onTap: () => context.push(AppRoutes.vault),
                 ),
                 if (vault.biometricsAvailable)
@@ -348,7 +413,10 @@ class SettingsView extends ConsumerWidget {
                     title: context.l10n.vaultEnableBiometric,
                     subtitle: context.l10n.vaultEnableBiometricSub,
                     value: settings.vaultBiometric,
-                    onChanged: (bool v) => ref.read(vaultProvider.notifier).setBiometrics(v),
+                    onChanged: (bool v) async {
+                      final bool ok = await ref.read(vaultProvider.notifier).setBiometrics(v);
+                      if (!ok && context.mounted) context.showSnack(context.l10n.vaultBiometricNeedsOpen);
+                    },
                   ),
                 _NavRow(
                   icon: Icons.timer_outlined,
@@ -378,13 +446,7 @@ class SettingsView extends ConsumerWidget {
           FvCard(
             child: Column(
               children: <Widget>[
-                _NavRow(
-                  icon: Icons.shield_outlined,
-                  title: context.l10n.appName,
-                  subtitle: '${context.l10n.versionLabel(version)} • ${context.l10n.release}',
-                  trailingText: 'ARM64',
-                  onTap: () {},
-                ),
+                _AboutRow(version: version),
                 _NavRow(
                   icon: Icons.privacy_tip_outlined,
                   title: context.l10n.privacyAndEncryption,
@@ -434,6 +496,44 @@ class SettingsView extends ConsumerWidget {
     );
   }
 
+  Future<void> _toggleAppLock(BuildContext context, WidgetRef ref, bool enable) async {
+    if (enable) {
+      final bool? done = await context.push<bool>(AppRoutes.appLockSetup);
+      if (done == true && context.mounted) context.showSnack(context.l10n.appLockOn);
+      return;
+    }
+    final String? pin = await showPinPrompt(
+      context,
+      title: context.l10n.appLockConfirmTitle,
+      message: context.l10n.appLockConfirmOff,
+    );
+    if (pin == null || !context.mounted) return;
+    final bool ok = await ref.read(appLockProvider.notifier).verify(pin);
+    if (!context.mounted) return;
+    if (!ok) {
+      context.showSnack(context.l10n.vaultWrongPin);
+      return;
+    }
+    await ref.read(appLockProvider.notifier).disable();
+    if (context.mounted) context.showSnack(context.l10n.appLockOff);
+  }
+
+  Future<void> _changeAppLockPin(BuildContext context, WidgetRef ref) async {
+    final String? pin = await showPinPrompt(context, title: context.l10n.vaultCurrentPin);
+    if (pin == null || !context.mounted) return;
+    final bool ok = await ref.read(appLockProvider.notifier).verify(pin);
+    if (!context.mounted) return;
+    if (!ok) {
+      context.showSnack(context.l10n.vaultWrongPin);
+      return;
+    }
+    final bool? done = await context.push<bool>(
+      AppRoutes.appLockSetup,
+      extra: <String, Object?>{'changeOnly': true},
+    );
+    if (done == true && context.mounted) context.showSnack(context.l10n.vaultPinChanged);
+  }
+
   String _accentName(BuildContext context, int argb) => switch (argb) {
         0xFF0B6E99 => context.l10n.accentOcean,
         0xFF2E7D32 => context.l10n.accentForest,
@@ -449,6 +549,39 @@ class SettingsView extends ConsumerWidget {
         SortField.date => context.l10n.date,
         SortField.type => context.l10n.type,
       };
+}
+
+class _AboutRow extends StatelessWidget {
+  const _AboutRow({required this.version});
+
+  final String version;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.tokens.cardBorder))),
+      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      child: Row(
+        children: <Widget>[
+          const FvAppIcon(size: 44),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(context.l10n.appName, style: context.texts.titleSmall),
+                const SizedBox(height: 2),
+                Text(
+                  context.l10n.versionLabel(version),
+                  style: context.texts.bodySmall?.copyWith(color: context.colors.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {

@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -20,40 +20,89 @@ class FileSystemService {
 
   // ------------------------------------------------------------ listing
 
-  /// Emits batches of entries so huge folders paint progressively.
+  /// Lists [path] off the UI isolate. Listing + stat for every child runs
+  /// with synchronous I/O inside a worker isolate, which is many times faster
+  /// than one async `stat` round-trip per entry and never janks the UI, even
+  /// for folders holding tens of thousands of files.
   Stream<List<FileEntry>> list(String path, {required bool showHidden}) async* {
-    final Directory dir = Directory(path);
-    if (!await dir.exists()) {
+    final FileSystemEntityType type = await FileSystemEntity.type(path);
+    if (type == FileSystemEntityType.notFound) {
       throw NotFoundFailure(path: path);
     }
-    List<FileEntry> batch = <FileEntry>[];
-    try {
-      await for (final FileSystemEntity entity in dir.list(followLinks: false)) {
-        final String name = p.basename(entity.path);
-        final bool hidden = name.startsWith('.');
-        if (hidden && !showHidden) continue;
-        final FileEntry? entry = await _safeEntry(entity.path, name);
-        if (entry == null) continue;
-        batch.add(entry);
-        if (batch.length >= AppConstants.listBatchSize) {
-          yield batch;
-          batch = <FileEntry>[];
-        }
-      }
-    } on FileSystemException catch (e) {
-      throw Failure.fromException(e, path: path);
+    final Object result = await _listInWorker(path, showHidden);
+    if (result is Failure) throw result;
+    final List<FileEntry> entries = result as List<FileEntry>;
+    // Hand the list over in slices so the first rows paint immediately on
+    // gigantic folders while the rest is merged in the next frames.
+    if (entries.length <= AppConstants.listBatchSize * 4) {
+      yield entries;
+      return;
     }
-    if (batch.isNotEmpty) yield batch;
+    for (int i = 0; i < entries.length; i += AppConstants.listBatchSize * 4) {
+      final int end = i + AppConstants.listBatchSize * 4;
+      yield entries.sublist(i, end > entries.length ? entries.length : end);
+    }
   }
 
-  Future<FileEntry?> _safeEntry(String path, String name) async {
+  /// Kept static (and non-async) so the closure sent to the worker captures
+  /// nothing but the two plain arguments.
+  static Future<Object> _listInWorker(String path, bool showHidden) =>
+      Isolate.run<Object>(() => _listGuarded(path, showHidden), debugName: 'list-dir');
+
+  /// Runs inside the worker isolate. Errors are converted to [Failure]s there
+  /// so only plain data crosses the isolate boundary.
+  static Object _listGuarded(String path, bool showHidden) {
     try {
-      final FileStat stat = await FileStat.stat(path);
-      if (stat.type == FileSystemEntityType.notFound) return null;
-      return entryFromStat(path, stat, name: name);
-    } catch (_) {
-      return null;
+      return listSync(path, showHidden: showHidden);
+    } catch (error) {
+      return Failure.fromException(error, path: path);
     }
+  }
+
+  /// Synchronous directory listing. Only call from a worker isolate.
+  static List<FileEntry> listSync(String path, {required bool showHidden}) {
+    final List<FileEntry> out = <FileEntry>[];
+    for (final FileSystemEntity entity in Directory(path).listSync(followLinks: false)) {
+      final String name = p.basename(entity.path);
+      if (!showHidden && name.startsWith('.')) continue;
+      try {
+        // FileStat.statSync follows links, so a link to a folder is shown as
+        // a folder and a dangling link is skipped.
+        final FileStat stat = FileStat.statSync(entity.path);
+        if (stat.type == FileSystemEntityType.notFound) continue;
+        out.add(entryFromStat(entity.path, stat, name: name));
+      } catch (_) {
+        // Unreadable entry – leave it out rather than fail the whole folder.
+      }
+    }
+    return out;
+  }
+
+  /// Direct-child counts for many folders at once ("24 items"), computed in
+  /// one worker isolate instead of one async listing per folder.
+  Future<Map<String, int>> childCounts(List<String> folders, {required bool showHidden}) {
+    if (folders.isEmpty) return Future<Map<String, int>>.value(const <String, int>{});
+    return _childCountsInWorker(List<String>.of(folders), showHidden);
+  }
+
+  static Future<Map<String, int>> _childCountsInWorker(List<String> folders, bool showHidden) {
+    return Isolate.run<Map<String, int>>(
+      () {
+        final Map<String, int> out = <String, int>{};
+        for (final String folder in folders) {
+          int n = 0;
+          try {
+            for (final FileSystemEntity e in Directory(folder).listSync(followLinks: false)) {
+              if (!showHidden && p.basename(e.path).startsWith('.')) continue;
+              n++;
+            }
+          } catch (_) {}
+          out[folder] = n;
+        }
+        return out;
+      },
+      debugName: 'child-counts',
+    );
   }
 
   static FileEntry entryFromStat(String path, FileStat stat, {String? name}) {
@@ -97,6 +146,40 @@ class FileSystemService {
       }
     } catch (_) {}
     return n;
+  }
+
+  /// The subset of [paths] that still exists, checked in one worker isolate.
+  Future<Set<String>> existing(List<String> paths) {
+    if (paths.isEmpty) return Future<Set<String>>.value(<String>{});
+    return _existingInWorker(List<String>.of(paths));
+  }
+
+  static Future<Set<String>> _existingInWorker(List<String> paths) {
+    return Isolate.run<Set<String>>(
+      () => <String>{
+        for (final String path in paths)
+          if (FileSystemEntity.typeSync(path, followLinks: false) != FileSystemEntityType.notFound)
+            path,
+      },
+      debugName: 'exists-batch',
+    );
+  }
+
+  /// Adds or removes the `.nomedia` marker that tells Android's media scanner
+  /// (and therefore every gallery) to ignore [folder]. Returns the files below
+  /// it so the caller can ask MediaStore to re-evaluate them.
+  Future<List<String>> setNoMedia(String folder, {required bool hidden}) async {
+    final File marker = File(p.join(folder, '.nomedia'));
+    if (hidden) {
+      if (!await marker.exists()) await marker.create();
+    } else if (await marker.exists()) {
+      await marker.delete();
+    }
+    final List<FileEntry> files = await flatten(folder);
+    return <String>[
+      for (final FileEntry f in files.take(4000))
+        if (!f.name.startsWith('.')) f.path,
+    ];
   }
 
   // ----------------------------------------------------------- creating
@@ -150,8 +233,18 @@ class FileSystemService {
 
   // ------------------------------------------------------------ copying
 
-  /// Streams [source] into [destination] in chunks. Supports pause/cancel
-  /// and reports copied bytes so speed can be measured.
+  /// Files up to this size are copied with the native `File.copy`
+  /// (kernel `sendfile`), which is the fastest path available from Dart.
+  static const int nativeCopyThreshold = 16 * 1024 * 1024;
+
+  /// Buffer used for large files so progress, pause and cancel stay
+  /// responsive while throughput stays close to the disk's limit.
+  static const int largeCopyChunk = 4 * 1024 * 1024;
+
+  /// Copies [source] to [destination] as fast as the storage allows and
+  /// reports copied bytes so speed can be measured. Large files are copied
+  /// in 4 MB slices and honour pause/cancel between slices; a partial
+  /// destination is always removed on failure or cancellation.
   Future<void> copyFile(
     String source,
     String destination, {
@@ -161,29 +254,61 @@ class FileSystemService {
   }) async {
     final File src = File(source);
     final File dst = File(destination);
+    final FileStat srcStat = await src.stat();
+    if (srcStat.type == FileSystemEntityType.notFound) {
+      throw NotFoundFailure(path: source);
+    }
     await dst.parent.create(recursive: true);
-    final IOSink sink = dst.openWrite();
-    try {
-      await for (final List<int> chunk in src.openRead()) {
-        if (gate != null) await gate.wait();
-        cancelToken?.throwIfCancelled();
-        sink.add(chunk);
-        onBytes?.call(chunk.length);
+    if (gate != null) await gate.wait();
+    cancelToken?.throwIfCancelled();
+
+    if (srcStat.size <= nativeCopyThreshold) {
+      try {
+        await src.copy(destination);
+      } catch (_) {
+        await _deleteQuietly(dst);
+        rethrow;
       }
-      await sink.flush();
-      await sink.close();
-    } catch (e) {
+      onBytes?.call(srcStat.size);
+    } else {
+      RandomAccessFile? input;
+      RandomAccessFile? output;
       try {
-        await sink.close();
-      } catch (_) {}
-      try {
-        if (await dst.exists()) await dst.delete();
-      } catch (_) {}
-      rethrow;
+        input = await src.open();
+        output = await dst.open(mode: FileMode.write);
+        final Uint8List buffer = Uint8List(largeCopyChunk);
+        while (true) {
+          if (gate != null) await gate.wait();
+          cancelToken?.throwIfCancelled();
+          final int read = await input.readInto(buffer);
+          if (read <= 0) break;
+          await output.writeFrom(buffer, 0, read);
+          onBytes?.call(read);
+        }
+        await output.flush();
+        await output.close();
+        output = null;
+        await input.close();
+        input = null;
+      } catch (_) {
+        try {
+          await output?.close();
+        } catch (_) {}
+        try {
+          await input?.close();
+        } catch (_) {}
+        await _deleteQuietly(dst);
+        rethrow;
+      }
     }
     try {
-      final FileStat s = await src.stat();
-      await dst.setLastModified(s.modified);
+      await dst.setLastModified(srcStat.modified);
+    } catch (_) {}
+  }
+
+  static Future<void> _deleteQuietly(File file) async {
+    try {
+      if (await file.exists()) await file.delete();
     } catch (_) {}
   }
 
@@ -233,29 +358,47 @@ class FileSystemService {
   }
 
   /// Flat list of every file below [root] with its size, for pre-flight
-  /// totals and progress maths. Directories are not included.
+  /// totals and progress maths. Directories are not included. The walk runs
+  /// with synchronous I/O in a worker isolate.
   Future<List<FileEntry>> flatten(String root, {CancelToken? cancelToken}) async {
-    final List<FileEntry> out = <FileEntry>[];
+    cancelToken?.throwIfCancelled();
     final FileStat rootStat = await FileStat.stat(root);
-    if (rootStat.type != FileSystemEntityType.directory) {
-      out.add(entryFromStat(root, rootStat));
-      return out;
+    if (rootStat.type == FileSystemEntityType.notFound) {
+      throw NotFoundFailure(path: root);
     }
+    if (rootStat.type != FileSystemEntityType.directory) {
+      return <FileEntry>[entryFromStat(root, rootStat)];
+    }
+    return IsolateWorker.run<String, List<FileEntry>>(
+      root,
+      _flattenJob,
+      cancelToken: cancelToken,
+      debugName: 'flatten',
+    );
+  }
+
+  static Future<List<FileEntry>> _flattenJob(String root, WorkerContext ctx) async {
+    final List<FileEntry> out = <FileEntry>[];
     final List<String> stack = <String>[root];
+    int visited = 0;
     while (stack.isNotEmpty) {
-      cancelToken?.throwIfCancelled();
+      if (++visited % 64 == 0) await ctx.checkpoint();
       final String dir = stack.removeLast();
+      List<FileSystemEntity> children;
       try {
-        await for (final FileSystemEntity e in Directory(dir).list(followLinks: false)) {
-          if (e is Directory) {
-            stack.add(e.path);
-          } else if (e is File) {
-            final FileStat s = await e.stat();
-            out.add(entryFromStat(e.path, s));
-          }
-        }
+        children = Directory(dir).listSync(followLinks: false);
       } on FileSystemException {
         // Unreadable subfolder – skip it rather than abort the whole op.
+        continue;
+      }
+      for (final FileSystemEntity e in children) {
+        if (e is Directory) {
+          stack.add(e.path);
+        } else if (e is File) {
+          try {
+            out.add(entryFromStat(e.path, e.statSync()));
+          } catch (_) {}
+        }
       }
     }
     return out;

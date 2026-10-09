@@ -10,6 +10,7 @@ import 'package:filevault/core/widgets/fv_common.dart';
 import 'package:filevault/core/widgets/fv_dialogs.dart';
 import 'package:filevault/domain/models/archive_entry.dart';
 import 'package:filevault/features/operations/operations_controller.dart';
+import 'package:filevault/core/utils/ui_overlays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -262,7 +263,9 @@ class _ArchiveViewState extends ConsumerState<ArchiveView> {
                   ),
         bottomNavigationBar: _loading || _errorKey != null
             ? null
-            : Material(
+            : ReserveBottomSpace(
+              height: 76,
+              child: Material(
                 color: context.isDark
                     ? context.colors.surfaceContainerHigh
                     : context.colors.surfaceContainerLowest,
@@ -286,6 +289,7 @@ class _ArchiveViewState extends ConsumerState<ArchiveView> {
                   ),
                 ),
               ),
+            ),
       ),
     );
   }

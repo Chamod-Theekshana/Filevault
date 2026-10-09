@@ -23,7 +23,7 @@ String categoryLabel(AppLocalizations l10n, FileCategory c) => switch (c) {
       FileCategory.other => l10n.categoryOther,
     };
 
-/// 2-column grid of category tiles.
+/// Compact 4-column grid of category shortcuts (icon, name, count).
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
     super.key,
@@ -52,16 +52,20 @@ class CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double width = context.screen.width;
+    final int columns = width >= 720 ? 8 : 4;
+    // Icon + two text lines; grows with the user's font size.
+    final double extent = 78 + 34 * MediaQuery.textScalerOf(context).scale(1);
     return GridView.builder(
       shrinkWrap: true,
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: FileCategory.homeTiles.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: 72,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        mainAxisExtent: extent,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 6,
       ),
       itemBuilder: (BuildContext context, int i) {
         final FileCategory c = FileCategory.homeTiles[i];
@@ -86,42 +90,39 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
+    final String label = categoryLabel(context.l10n, summary.category);
+    return Semantics(
+      button: true,
+      label: label,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(2, 8, 2, 6),
+          child: Column(
             children: <Widget>[
-              FvCategoryTile(category: summary.category, size: 44),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      categoryLabel(context.l10n, summary.category),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.texts.titleSmall,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      unknown
-                          ? '—'
-                          : '${FileSizeFormatter.count(summary.itemCount)} • ${FileSizeFormatter.format(summary.totalBytes)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.texts.bodySmall?.copyWith(
-                        color: context.colors.onSurfaceVariant,
-                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
+              FvCategoryTile(
+                category: summary.category,
+                size: 52,
+                radius: 16,
+                iconSize: 25,
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: context.texts.labelMedium?.copyWith(color: context.colors.onSurface),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                unknown ? '—' : FileSizeFormatter.count(summary.itemCount),
+                maxLines: 1,
+                style: context.texts.bodySmall?.copyWith(
+                  fontSize: 11,
+                  color: context.colors.onSurfaceVariant,
+                  fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -142,7 +143,7 @@ class RecentFilesRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 182,
+      height: 168,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -164,7 +165,7 @@ class _RecentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool media = entry.isImage || entry.isVideo;
     return SizedBox(
-      width: 156,
+      width: 140,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -174,15 +175,15 @@ class _RecentCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                height: 118,
+                height: 104,
                 decoration: BoxDecoration(
-                  color: context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLow,
+                  color: context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: context.tokens.cardBorder),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: media
-                    ? FvThumbnail(entry: entry, size: 156, radius: 0, showBadge: false, fit: BoxFit.cover)
+                    ? FvThumbnail(entry: entry, size: 140, radius: 0, showBadge: false, fit: BoxFit.cover)
                     : Center(
                         child: FvCategoryTile(
                           category: entry.category,
@@ -306,66 +307,154 @@ class _QuickRow extends StatelessWidget {
   }
 }
 
-/// Secure Folder entry point shown on the home screen.
+/// Secure Folder entry point. Always drawn on the deep "vault" ink so the
+/// private area looks the same wherever it appears, with the amber keyhole
+/// from the app icon as its only accent.
 class SecureFolderCard extends StatelessWidget {
   const SecureFolderCard({
     super.key,
     required this.itemCount,
     required this.configured,
     required this.onTap,
+    this.unlocked = false,
   });
 
   final int itemCount;
   final bool configured;
+  final bool unlocked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final Color ink = context.tokens.onVault;
     return Material(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
-      color: context.colors.primaryContainer,
+      color: context.tokens.vault,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: context.colors.onPrimary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.lock_outline, color: context.colors.onPrimary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      context.l10n.secureFolder,
-                      style: context.texts.titleMedium?.copyWith(color: context.colors.onPrimary),
+        child: Stack(
+          children: <Widget>[
+            Positioned(
+              right: -18,
+              bottom: -26,
+              child: Icon(Icons.shield_outlined, size: 128, color: ink.withValues(alpha: 0.06)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      configured
-                          ? '${context.l10n.itemCount(itemCount)} • ${context.l10n.vaultSubtitle}'
-                          : context.l10n.vaultNotSetUp,
-                      style: context.texts.bodySmall?.copyWith(
-                        color: context.colors.onPrimary.withValues(alpha: 0.85),
+                    child: Icon(
+                      configured ? Icons.key_rounded : Icons.add_moderator_outlined,
+                      color: context.tokens.amber,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          context.l10n.secureFolder,
+                          style: context.texts.titleMedium?.copyWith(color: ink),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          configured
+                              ? '${context.l10n.itemCount(itemCount)} · ${context.l10n.vaultSubtitle}'
+                              : context.l10n.vaultSetUpPrompt,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.texts.bodySmall?.copyWith(color: ink.withValues(alpha: 0.78)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (configured)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: ink.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                    ),
-                  ],
-                ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            unlocked ? Icons.lock_open_rounded : Icons.lock_rounded,
+                            size: 14,
+                            color: ink,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            unlocked ? context.l10n.vaultOpenState : context.l10n.vaultLockedState,
+                            style: context.texts.labelMedium?.copyWith(color: ink),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Icon(Icons.chevron_right, color: ink),
+                ],
               ),
-              Icon(Icons.chevron_right, color: context.colors.onPrimary),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// Small row of secondary destinations (favourites, tags, trash, activity).
+class ToolShortcuts extends StatelessWidget {
+  const ToolShortcuts({super.key, required this.items});
+
+  final List<(IconData, String, VoidCallback)> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        for (int i = 0; i < items.length; i++) ...<Widget>[
+          if (i > 0) const SizedBox(width: 10),
+          Expanded(
+            child: Material(
+              color: context.isDark ? context.colors.surfaceContainerLow : context.colors.surfaceContainerLowest,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: context.tokens.cardBorder),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: items[i].$3,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                  child: Column(
+                    children: <Widget>[
+                      Icon(items[i].$1, size: 22, color: context.tokens.onTonal),
+                      const SizedBox(height: 6),
+                      Text(
+                        items[i].$2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.texts.labelMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

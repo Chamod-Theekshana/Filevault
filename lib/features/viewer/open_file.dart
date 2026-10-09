@@ -15,12 +15,17 @@ Future<void> openFileEntry(
   WidgetRef ref,
   FileEntry entry, {
   List<FileEntry> siblings = const <FileEntry>[],
+  bool recordRecent = true,
 }) async {
   if (entry.isDirectory) {
-    context.push(AppRoutes.withPath(AppRoutes.browse, entry.path));
+    openFolder(context, entry.path);
     return;
   }
-  await ref.read(collectionsRepositoryProvider).recordOpened(entry);
+  // Secure Folder previews pass recordRecent: false so decrypted copies never
+  // show up in "Recent files" or anywhere else outside the vault.
+  if (recordRecent) {
+    await ref.read(collectionsRepositoryProvider).recordOpened(entry);
+  }
   if (!context.mounted) return;
 
   if (entry.isImage) {
@@ -66,6 +71,19 @@ Future<void> openFileEntry(
     return;
   }
   await openWithExternalApp(context, entry);
+}
+
+/// Opens [path] in the Browse tab. Inside the tab shell this pushes a new
+/// folder page; from full-screen routes outside it (Favorites, Recents,
+/// Tags, the vault…) it switches to the Browse tab instead – pushing a shell
+/// route from outside the shell would build the shell twice.
+void openFolder(BuildContext context, String path) {
+  final String location = AppRoutes.withPath(AppRoutes.browse, path);
+  if (StatefulNavigationShell.maybeOf(context) != null) {
+    context.push(location);
+  } else {
+    context.go(location);
+  }
 }
 
 /// Hands the file to another installed app.

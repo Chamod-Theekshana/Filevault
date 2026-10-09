@@ -134,8 +134,8 @@ Future<bool> showConfirmDialog(
           onPressed: () => Navigator.of(context).pop(true),
           style: destructive
               ? FilledButton.styleFrom(
-                  backgroundColor: context.colors.error,
-                  foregroundColor: context.colors.onError,
+                  backgroundColor: context.isDark ? context.colors.errorContainer : context.colors.error,
+                  foregroundColor: Colors.white,
                 )
               : null,
           child: Text(confirmLabel ?? context.l10n.ok),
@@ -223,8 +223,11 @@ Future<T?> showOptionSheet<T>(
 }) {
   return showModalBottomSheet<T>(
     context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (BuildContext context) => SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Padding(
@@ -245,6 +248,7 @@ Future<T?> showOptionSheet<T>(
             ),
           const SizedBox(height: 8),
         ],
+        ),
       ),
     ),
   );
